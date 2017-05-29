@@ -1,0 +1,73 @@
+<div>
+  <h3 class="text-center">Вітаємо вас на нашому сайті!</h3>
+  <p class="text-center">Ми раді, що ви знайшли час, щоб пройти наш тест.</p>
+  <p class="text-center">
+    Вам буде запропоновано три окремі методики. Вони спрямовані на вивчення ваших особистісних властивостей. В подальшому, при обробці результатів, ми не будемо окремо аналізувати ваші відповіді. Всі результати оброблятимуться як загальний масив даних. Тож, дякуємо за вашу відвертість!
+  </p>
+</div>
+<hr>
+<div class="container">
+  <form class="form-horizontal" role="form">
+    <div class="form-group">
+      <label for="firstName" class="col-sm-3 control-label">Ім'я</label>
+      <div class="col-sm-9">
+        <input type="text" id="firstName" placeholder="Іван" class="form-control" autofocus ng-model="name">
+        <!--<span class="help-block">П.І.Б. або псевдонім</span>-->
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="sex" class="col-sm-3 control-label">Стать</label>
+      <div col-sm-9>
+        <select name="sex" id="sex" ng-model="sex" style="width: 50%; margin-left: 15px">
+          <option value="male">чоловік</option>
+          <option value="female">жінка</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="age" class="col-sm-3 control-label">Вік</label>
+      <div class="col-sm-9">
+        <input type="number" id="age" placeholder="25" class="form-control" autofocus ng-model="age">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="education" class="col-sm-3 control-label">Освіта</label>
+      <div class="col-sm-9">
+        <input type="text" id="education" placeholder="вища\середня\спеціальна" class="form-control" autofocus ng-model="education">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="occupation" class="col-sm-3 control-label">Професія</label>
+      <div class="col-sm-9">
+        <input type="text" id="occupation" placeholder="студент" class="form-control" autofocus ng-model="occupation">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="marital" class="col-sm-3 control-label">Сімейний стан</label>
+      <div class="col-sm-9">
+        <input type="text" id="marital" placeholder="студент" class="form-control" autofocus ng-model="marital">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="city" class="col-sm-3 control-label">Місто, область</label>
+      <div class="col-sm-9">
+        <input type="text" id="city" placeholder="Київ" class="form-control" autofocus ng-model="city">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="email" class="col-sm-3 control-label">Електронна адреса</label>
+      <div class="col-sm-9">
+        <input type="email" id="email" placeholder="ivan.student@gmail.com" class="form-control" autofocus ng-model="email">
+      </div>
+    </div>
+    <div class="alert alert-info text-center">
+      <strong>Гарантуємо повну конфіденційність щодо наданої Вами інформаці</strong>
+    </div>
+    <hr>
+    <div class="form-group">
+      <div class="col-sm-12">
+        <button type="submit" class="btn btn-primary btn-block" ng-click="$ctrl.startTest()">Розпочати тест</button>
+      </div>
+    </div>
+  </form>
+</div>
