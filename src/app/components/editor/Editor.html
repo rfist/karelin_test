@@ -1,0 +1,30 @@
+<div class="editor_menu">
+  <input type="text" ng-model="$ctrl.testNumber"><br>
+  <input type="button" value="Save test" ng-click="$ctrl.saveTest()">
+  <input type="button" value="Load test" ng-click="$ctrl.loadTest()">
+  <br>
+  <input id="offsetX" type="text" ng-model="$ctrl.offsetX"><input type="text" ng-model="$ctrl.offsetY"><input type="button" value="Apply" ng-click="$ctrl.applyOffset()">
+</div>
+<div class="object-properites">
+  <label for="type_object">Object type </label><select id="type_object" ng-model="$ctrl.type" ng-change="$ctrl.onTypeChange()">
+    <option selected value="object">Object</option>
+    <option value="key_object">Key object</option>
+    <option value="background">background</option>
+  </select>
+  <div>
+    <label for="text-fill-color">Fill color:   </label>
+    <input type="color" ng-model="$ctrl.fillColor" ng-change="$ctrl.onFillColorChange()" id="text-fill-color">
+  </div>
+  <div>
+    <label for="text-stroke-color">Stroke color:</label>
+    <input type="color" ng-model="$ctrl.strokeColor" ng-change="$ctrl.onStrokeColorChange()" id="text-stroke-color">
+  </div>
+</div>
+
+<canvas class="canvas" id="c" width="600" height="730" style="border:1px solid #aaa"></canvas>
+<br>
+<input type="button" value="Add rectangle" ng-click="$ctrl.addRectangle()">
+<input type="button" value="Draw line" ng-click="$ctrl.drawLine()" ng-disabled="$ctrl.isDrawLine">
+<input type="button" value="Duplicate current" ng-click="$ctrl.duplicateObj()">
+<input type="button" value="Attach objects" ng-click="$ctrl.attachObjects()">
+<hr>
