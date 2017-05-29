@@ -7,10 +7,8 @@ class WitkinTestController {
     this.$timeout = $timeout;
     this.$state = $state;
     this.userService = userService;
-    // this.SHOW_TEST_TIME = 15000;
-    // this.SHOW_REQUIRED_TIME = 10000;
-    this.SHOW_TEST_TIME = 1000;
-    this.SHOW_REQUIRED_TIME = 1000;
+    this.SHOW_TEST_TIME = 15000;
+    this.SHOW_REQUIRED_TIME = 10000;
     this.startTime = 0;
     this.isTestStarted = false;
     this.isTimerStarted = false;

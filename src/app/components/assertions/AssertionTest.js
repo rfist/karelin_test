@@ -18,7 +18,7 @@ class AssertionTestController {
     Survey.defaultBootstrapCss.navigationButton = 'btn btn-green';
     Survey.defaultBootstrapCss.progressBar = 'bar-green';
     const surveyJSON = {locale: 'ru', pages: [], requiredText: '', showProgressBar: 'top', goNextPageAutomatic: true};
-    const len = 10; // questions.length
+    const len = questions.length;
     for (let i = 0; i < len; i++) {
       if (questions[i].length > 0) {
         surveyJSON.pages.push(AssertionTestController.constructPage(i + 1, questions[i]));
@@ -42,12 +42,12 @@ class AssertionTestController {
               text: '1 - абсолютно не про мене'
             },
             {
-              value: '3',
-              text: '3 - водночас і схоже, і несхоже на мене'
-            },
-            {
               value: '2',
               text: '2 - мало схоже на мене'
+            },
+            {
+              value: '3',
+              text: '3 - водночас і схоже, і несхоже на мене'
             },
             {
               value: '4',
