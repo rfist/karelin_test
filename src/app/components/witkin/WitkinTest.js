@@ -10,8 +10,11 @@ class WitkinTestController {
     this.SHOW_TEST_TIME = 15000;
     this.SHOW_REQUIRED_TIME = 10000;
     this.startTime = 0;
+    this.totalTime = 0;
     this.isTestStarted = false;
     this.isTimerStarted = false;
+    this.TEXT_STEP_1 = 'Складна фігура';
+    this.TEXT_STEP_2 = 'Проста фігура';
     this.canvas = new fabric.Canvas('c');
     this.id = parseInt($stateParams.id, 10);
     $http.get('tests/test' + this.id + '.json')
@@ -55,7 +58,11 @@ class WitkinTestController {
           multipleAnswers.push(obj);
         }
       }
-      obj.selectable = false;
+      obj.hasControls = false;
+      obj.lockMovementX = true;
+      obj.lockMovementY = true;
+      obj.lockRotation = true;
+      obj.selectable = obj.id !== 'background';
     });
     multipleAnswers.forEach(obj => {
       answersNumbers.forEach(answer => {
@@ -65,27 +72,72 @@ class WitkinTestController {
       });
     });
     this.showLayers(['background', 'lines'].concat(this.answers));
-    this.info = 'Спочатку роздивіться складну фігуру';
+    this.info = this.TEXT_STEP_1 + ' ' + (this.SHOW_TEST_TIME / 1000) + ' с. ';
     this.refresh();
     console.log('init complete');
-    this.$timeout(this.showRequired.bind(this), this.SHOW_TEST_TIME);
+    this.$timeout(this.showRequired.bind(this), 1000);
+    this.zoomIt(1.5);
+  }
+  zoomIt(factor) {
+    this.canvas.setHeight(this.canvas.getHeight() * factor);
+    this.canvas.setWidth(this.canvas.getWidth() * factor);
+    if (this.canvas.backgroundImage) {
+      // Need to scale background images as well
+      const bi = this.canvas.backgroundImage;
+      bi.width *= factor;
+      bi.height *= factor;
+    }
+    const objects = this.canvas.getObjects();
+// eslint-disable-next-line
+    for (let i in objects) {
+      const scaleX = objects[i].scaleX;
+      const scaleY = objects[i].scaleY;
+      const left = objects[i].left;
+      const top = objects[i].top;
+
+      const tempScaleX = scaleX * factor;
+      const tempScaleY = scaleY * factor;
+      const tempLeft = left * factor;
+      const tempTop = top * factor;
+
+      objects[i].scaleX = tempScaleX;
+      objects[i].scaleY = tempScaleY;
+      objects[i].left = tempLeft;
+      objects[i].top = tempTop;
+
+      objects[i].setCoords();
+    }
+    this.canvas.renderAll();
+    this.canvas.calcOffset();
   }
   showRequired() {
-    this.showLayers(['required']);
-    this.info = 'Тепер запам\'ятайте фігуру, яку треба знайти';
-    this.refresh();
-    this.$timeout(this.startTimer.bind(this), this.SHOW_REQUIRED_TIME);
+    this.SHOW_TEST_TIME -= 1000;
+    if (this.SHOW_TEST_TIME === 0) {
+      this.showLayers(['required']);
+      this.info = this.TEXT_STEP_2 + ' ' + (this.SHOW_REQUIRED_TIME / 1000) + ' с. ';
+      this.refresh();
+      this.$timeout(this.startTimer.bind(this), 1000);
+    } else {
+      this.info = this.TEXT_STEP_1 + ' ' + (this.SHOW_TEST_TIME / 1000) + ' с. ';
+      this.$timeout(this.showRequired.bind(this), 1000);
+    }
   }
   startTimer() {
-    this.showLayers(['background', 'lines'].concat(this.answers));
-    this.startTime = this.getCurrentTime();
-    this.info = '';
-    this.isTimerStarted = true;
-    this.refresh();
+    this.SHOW_REQUIRED_TIME -= 1000;
+    if (this.SHOW_REQUIRED_TIME === 0) {
+      this.showLayers(['background', 'lines'].concat(this.answers));
+      this.startTime = this.getCurrentTime();
+      this.info = '';
+      this.isTimerStarted = true;
+      this.refresh();
+    } else {
+      this.info = this.TEXT_STEP_2 + ' ' + (this.SHOW_REQUIRED_TIME / 1000) + ' с. ';
+      this.$timeout(this.startTimer.bind(this), 1000);
+    }
   }
   startTest() {
-    this.totalTime = this.getCurrentTime() - this.startTime;
-    this.info = this.totalTime;
+    this.totalTime += (this.getCurrentTime() - this.startTime);
+    this.info = ''; // this.totalTime;
     this.isTestStarted = true;
   }
   addToLayer(obj) {
@@ -161,7 +213,11 @@ class WitkinTestController {
         this.$state.go('circles');
       }
     } else {
-      this.info = 'Не вірно, спробуйте ще';
+      this.reset();
+      this.startTime = this.getCurrentTime();
+      this.isTestStarted = false;
+      this.isTimerStarted = true;
+      this.info = 'Не вірно, спробуйте знов';
     }
   }
   checkSelectedFigure() {
