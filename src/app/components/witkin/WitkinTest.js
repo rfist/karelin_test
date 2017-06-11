@@ -76,7 +76,9 @@ class WitkinTestController {
     this.refresh();
     console.log('init complete');
     this.$timeout(this.showRequired.bind(this), 1000);
-    this.zoomIt(1.5);
+    if (this.id !== 11 && this.id !== 14 && this.id !== 17) {
+      this.zoomIt(1.5);
+    }
   }
   zoomIt(factor) {
     this.canvas.setHeight(this.canvas.getHeight() * factor);
@@ -176,8 +178,8 @@ class WitkinTestController {
   }
   onMouseOut(obj) {
     if (this.isTestStarted) {
-      if (obj.selected && obj.fill !== 'yellow') {
-        obj.setFill('yellow');
+      if (obj.selected && obj.fill !== 'red') {
+        obj.setFill('red');
         this.refresh();
       } else if (obj.fill !== 'black') {
         obj.setFill('black');
@@ -228,18 +230,38 @@ class WitkinTestController {
         haveCount++;
       }
     });
-    this.answers.forEach(answerLayer => {
+    const MAX_ANSWERS = 10;
+    let answer = 0;
+    while (answer <= MAX_ANSWERS) {
       let needCount = 0;
-      this.layers[answerLayer].forEach(obj => {
-        if (obj.selected) {
-          needCount++;
+      // eslint-disable-next-line
+      this.answers.forEach(answerLayer => {
+        if (answerLayer.indexOf('_' + answer) > -1) {
+          this.layers[answerLayer].forEach(obj => {
+            if (obj.selected) {
+              needCount++;
+            }
+          });
         }
       });
-      console.log('result', haveCount, needCount);
-      if (needCount === haveCount && this.layers[answerLayer].length === haveCount) {
+      if (needCount === haveCount) {
         result = true;
       }
-    });
+      console.log('answer', answer, 'needCount', needCount);
+      answer++;
+    }
+    // this.answers.forEach(answerLayer => {
+    //   let needCount = 0;
+    //   this.layers[answerLayer].forEach(obj => {
+    //     if (obj.selected) {
+    //       needCount++;
+    //     }
+    //   });
+    //   console.log('result', haveCount, needCount, this.layers[answerLayer].length);
+    //   if (needCount === haveCount && this.layers[answerLayer].length === haveCount) {
+    //     result = true;
+    //   }
+    // });
     return result;
   }
   reset() {

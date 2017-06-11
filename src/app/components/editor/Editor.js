@@ -267,6 +267,86 @@ class EditorController {
           obj.top -= 465;
           obj.left -= 190;
           break;
+        case 3:
+          obj.top -= 500;
+          obj.left -= 190;
+          break;
+        case 4:
+          obj.top -= 450;
+          obj.left -= 10;
+          break;
+        case 5:
+          obj.top -= 460;
+          obj.left -= 190;
+          break;
+        case 7:
+          obj.top -= 460;
+          obj.left -= 90;
+          break;
+        case 8:
+          obj.top -= 470;
+          obj.left -= 200;
+          break;
+        case 9:
+          obj.top -= 530;
+          obj.left -= 250;
+          break;
+        case 10:
+          obj.top -= 430;
+          obj.left -= 150;
+          break;
+        case 11:
+          obj.top -= 300;
+          obj.left -= 150;
+          break;
+        case 12:
+          obj.top -= 450;
+          obj.left -= 160;
+          break;
+        case 13:
+          obj.top -= 490;
+          obj.left -= 180;
+          break;
+        case 14:
+          obj.top -= 430;
+          obj.left -= 60;
+          break;
+        case 15:
+          obj.top -= 430;
+          obj.left -= 150;
+          break;
+        case 16:
+          obj.top -= 470;
+          obj.left -= 150;
+          break;
+        case 17:
+          obj.top -= 280;
+          obj.left -= 90;
+          break;
+        case 18:
+          obj.top -= 470;
+          obj.left -= 180;
+          break;
+        case 20:
+          obj.top -= 470;
+          obj.left -= 200;
+          break;
+        case 21:
+          obj.top -= 490;
+          obj.left -= 240;
+          break;
+        case 22:
+          obj.top -= 470;
+          obj.left -= 150;
+          break;
+        case 23:
+          obj.top -= 430;
+          obj.left -= 250;
+          break;
+        case 24:
+          obj.top -= 450;
+          obj.left -= 200;
+          break;
         default:
           break;
       }
