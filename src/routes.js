@@ -22,6 +22,10 @@ function routesConfig($stateProvider, $urlRouterProvider, $locationProvider) {
       url: '/witkin-help',
       component: 'witkinHelp'
     })
+    .state('witkin-before-start', {
+      url: '/witkin-help2',
+      component: 'witkinHelp2'
+    })
     .state('assertions', {
       url: '/assertions',
       component: 'assertionTest'
