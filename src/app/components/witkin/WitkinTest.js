@@ -15,6 +15,7 @@ class WitkinTestController {
     this.isTimerStarted = false;
     this.TEXT_STEP_1 = 'Складна фігура';
     this.TEXT_STEP_2 = 'Проста фігура';
+    this.MAX_SEARCH_TIME = 120;
     this.canvas = new fabric.Canvas('c');
     this.id = parseInt($stateParams.id, 10);
     $http.get('tests/test' + this.id + '.json')
@@ -72,7 +73,7 @@ class WitkinTestController {
       });
     });
     this.showLayers(['background', 'lines'].concat(this.answers));
-    this.info = this.TEXT_STEP_1 + ' ' + (this.SHOW_TEST_TIME / 1000) + ' с. ';
+    this.info = this.TEXT_STEP_1 + ' ' + this.id + ' з ' + this.TESTS_COUNT + ' - ' + (this.SHOW_TEST_TIME / 1000) + ' с. ';
     this.refresh();
     console.log('init complete');
     this.$timeout(this.showRequired.bind(this), 1000);
@@ -120,7 +121,7 @@ class WitkinTestController {
       this.refresh();
       this.$timeout(this.startTimer.bind(this), 1000);
     } else {
-      this.info = this.TEXT_STEP_1 + ' ' + (this.SHOW_TEST_TIME / 1000) + ' с. ';
+      this.info = this.TEXT_STEP_1 + ' ' + this.id + ' з ' + this.TESTS_COUNT + ' - ' + (this.SHOW_TEST_TIME / 1000) + ' с. ';
       this.$timeout(this.showRequired.bind(this), 1000);
     }
   }
@@ -132,9 +133,19 @@ class WitkinTestController {
       this.info = '';
       this.isTimerStarted = true;
       this.refresh();
+      this.$timeout(this.showElapsedTime.bind(this), 1000);
     } else {
       this.info = this.TEXT_STEP_2 + ' ' + (this.SHOW_REQUIRED_TIME / 1000) + ' с. ';
       this.$timeout(this.startTimer.bind(this), 1000);
+    }
+  }
+  showElapsedTime() {
+    if (!this.isTestStarted) {
+      const currentTime = parseInt(this.getCurrentTime() - this.startTime, 10);
+      if (currentTime <= this.MAX_SEARCH_TIME) {
+        this.info = `Пошук фігури: ${currentTime} с.`;
+        this.$timeout(this.showElapsedTime.bind(this), 1000);
+      }
     }
   }
   startTest() {
@@ -210,6 +221,7 @@ class WitkinTestController {
         const nextTest = this.id + 1;
         this.$state.go('witkin-start', {id: nextTest});
       } else if (this.userService.getFirstTestName() === 'circles') {
+        // TODO: send results to db
         this.$state.go('end');
       } else {
         this.$state.go('circles');

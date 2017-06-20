@@ -47,13 +47,13 @@ class MainController {
       city: this.$scope.city,
       time: moment().valueOf()
     };
-    if (this.firstTest === 'witkin') {
-      user.firstTest = 'circles';
-    } else {
-      user.firstTest = 'witkin';
-    }
+    user.firstTest = 'circles'; // now circles always is first
+    // if (this.firstTest === 'witkin') {
+    //   user.firstTest = 'circles';
+    // } else {
+    //   user.firstTest = 'witkin';
+    // }
     this.userService.setUser(user);
-    // TODO: добавить "позиционное уравнивание"
     this.$state.go(user.firstTest);
     console.log('user start', user.firstTest);
     // this.$state.go('witkin', {id: 1});

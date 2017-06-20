@@ -17,7 +17,7 @@ class AssertionTestController {
     Survey.Survey.cssType = 'bootstrap';
     Survey.defaultBootstrapCss.navigationButton = 'btn btn-green';
     Survey.defaultBootstrapCss.progressBar = 'bar-green';
-    const surveyJSON = {locale: 'ru', pages: [], requiredText: '', showProgressBar: 'top', goNextPageAutomatic: true};
+    const surveyJSON = {locale: 'ru', pages: [], requiredText: '', showProgressBar: 'top', goNextPageAutomatic: false};
     const len = questions.length;
     for (let i = 0; i < len; i++) {
       if (questions[i].length > 0) {
@@ -69,6 +69,7 @@ class AssertionTestController {
   finishTest(survey) {
     // const resultAsString = angular.toJson(survey.data);
     this.userService.setAssertions(survey.data);
+    // TODO: send results to db
     if (this.userService.getUser().firstTest === 'witkin') {
       this.$state.go('end');
     } else {

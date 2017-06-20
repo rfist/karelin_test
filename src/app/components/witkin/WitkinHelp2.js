@@ -3,14 +3,14 @@ class WitkinHelpController {
     this.$state = $state;
   }
   startTest() {
-    this.$state.go('witkin-before-start', {id: 1});
+    this.$state.go('witkin-start', {id: 1});
   }
 }
 
 WitkinHelpController.$inject = ['$state'];
 
-export const witkinHelp = {
-  template: require('./WitkinHelp.html'),
+export const witkinHelp2 = {
+  template: require('./WitkinHelp2.html'),
   controller: WitkinHelpController
 };
 
