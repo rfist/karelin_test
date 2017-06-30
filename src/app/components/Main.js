@@ -4,36 +4,32 @@ class MainController {
     this.$state = $state;
     this.userService = userService;
     this.$window = $window;
-    this.text = 'My brand new component!';
+    this.id = -1;
     this.connectToServer();
     console.log('service test');
   }
   connectToServer() {
-    let xhr;
     if (this.$window.XMLHttpRequest) { // Mozilla, Safari, ...
-      xhr = new XMLHttpRequest();
+      this.xhr = new XMLHttpRequest();
     } else if (this.$window.ActiveXObject) { // IE 8 and older
 // eslint-disable-next-line no-undef
-      xhr = new ActiveXObject('Microsoft.XMLHTTP');
+      this.xhr = new ActiveXObject('Microsoft.XMLHTTP');
     }
     const data = 'command=get_info';
-    xhr.open('POST', 'http://karelin.s-host.net/php/db.php', true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.send(data);
+    this.xhr.open('POST', 'http://karelin.s-host.net/php/db.php', true);
+    this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    this.xhr.send(data);
     const prom = new Promise(resolve => {
-      xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          resolve(angular.fromJson(xhr.responseText));
+      this.xhr.onreadystatechange = () => {
+        if (this.xhr.readyState === 4 && this.xhr.status === 200) {
+          resolve(angular.fromJson(this.xhr.responseText));
         }
       };
     });
     prom.then(result => {
       const lastNumber = Math.max.apply(this, R.pluck('id')(result));
-      const isLast = n => n.id === lastNumber;
-      this.firstTest = R.filter(isLast, result)[0].first_test;
-      console.log('result', result);
-      console.log('firstTest', this.firstTest);
-      console.log('last number', lastNumber);
+      this.id = lastNumber + 1;
+      console.log('user id', this.id);
     });
   }
   startTest() {
@@ -45,6 +41,7 @@ class MainController {
       occupation: this.$scope.occupation,
       marital: this.$scope.marital,
       city: this.$scope.city,
+      id: this.id,
       time: moment().valueOf()
     };
     user.firstTest = 'circles'; // now circles always is first
@@ -54,8 +51,23 @@ class MainController {
     //   user.firstTest = 'witkin';
     // }
     this.userService.setUser(user);
-    this.$state.go(user.firstTest);
-    console.log('user start', user.firstTest);
+    const data = 'data=' + angular.toJson(user) + '&id=' + this.id + '&date=' + moment().valueOf() + '&first_test=' + this.userService.getFirstTestName();
+    this.xhr.open('POST', 'http://karelin.s-host.net/php/add.php', true);
+    this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    this.xhr.send(data);
+    console.log('data', data);
+    const prom = new Promise(resolve => {
+      this.xhr.onreadystatechange = () => {
+        if (this.xhr.readyState === 4 && this.xhr.status === 200) {
+          resolve(this.xhr.responseText);
+        }
+      };
+    });
+    prom.then(result => {
+      console.log('save results to server', result);
+      console.log('user start', user.firstTest);
+      this.$state.go(user.firstTest);
+    });
     // this.$state.go('witkin', {id: 1});
   }
 }

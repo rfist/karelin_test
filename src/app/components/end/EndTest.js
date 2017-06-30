@@ -2,7 +2,7 @@ class EndTestController {
   constructor(userService, $window) {
     this.userService = userService;
     this.$window = $window;
-    this.connectToServer();
+    // this.connectToServer();
   }
   connectToServer() {
     if (this.$window.XMLHttpRequest) { // Mozilla, Safari, ...

@@ -1,7 +1,10 @@
 <canvas class="canvas" id="c" width="300" height="300"></canvas>
 <br>
 <div class="menu">
-  <button type="submit" class="btn btn-primary btn-block" ng-click="$ctrl.startTest()" ng-hide="$ctrl.isTestStarted || !$ctrl.isTimerStarted">ФІГУРУ ЗНАЙДЕНО</button>
+  <div class="btn-group">
+    <button type="submit" class="btn btn-green" ng-click="$ctrl.startTest()" ng-hide="($ctrl.isTestStarted || !$ctrl.isTimerStarted) || $ctrl.SHOW_TEST_TIME > 0">ФІГУРУ ЗНАЙДЕНО</button>
+    <button type="submit" class="btn btn-primary" ng-click="$ctrl.showSimpleAgain()" ng-hide="$ctrl.isTestStarted || !$ctrl.isTimerStarted">{{$ctrl.oneMoreTimeText}}</button>
+  </div>
   <div class="btn-group">
     <button type="submit" class="btn btn-green" ng-click="$ctrl.check()" ng-hide="!$ctrl.isTestStarted">Перевірити</button>
     <button type="submit" class="btn btn-primary" ng-click="$ctrl.reset()" ng-hide="!$ctrl.isTestStarted">Очистити</button>

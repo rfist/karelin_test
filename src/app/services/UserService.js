@@ -1,5 +1,6 @@
 class UserService {
   constructor() {
+    this.lastWitkinTest = 0;
     this.lastNumber = 0;
     this.selectedCircle = 0;
     this.user = {firstTest: 'unknown'};
@@ -24,11 +25,14 @@ class UserService {
   setAssertions(assertions) {
     this.assertions = assertions;
   }
-  getResults() {
+  getCirclesResults() {
     const results = {};
-    results.user = this.user;
     results.assertions = this.assertions;
     results.selectedCircle = this.selectedCircle;
+    return angular.toJson(results);
+  }
+  getWitkinResults() {
+    const results = {};
     results.witkin = this.witkin;
     return angular.toJson(results);
   }

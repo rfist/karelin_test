@@ -1,23 +1,34 @@
 class WitkinTestController {
   constructor($stateParams, $http, $timeout, $window, $state, userService) {
-    this.TESTS_COUNT = 2;
+    this.TESTS_COUNT = 24;
+    this.HIGHLIGHT_COLOR = 'grey';
+    this.SELECT_COLOR = 'white';
     this.info = '';
     this.layers = {};
     this.answers = [];
     this.$timeout = $timeout;
     this.$state = $state;
+    this.$window = $window;
     this.userService = userService;
     this.SHOW_TEST_TIME = 15000;
     this.SHOW_REQUIRED_TIME = 10000;
     this.startTime = 0;
+    this.selectedTime = 0;
     this.totalTime = 0;
     this.isTestStarted = false;
     this.isTimerStarted = false;
     this.TEXT_STEP_1 = 'Складна фігура';
     this.TEXT_STEP_2 = 'Проста фігура';
+    this.oneMoreTimeText = 'Ще раз подивитися просту фігуру';
     this.MAX_SEARCH_TIME = 120;
     this.canvas = new fabric.Canvas('c');
     this.id = parseInt($stateParams.id, 10);
+    console.log('lastWitkinTest', userService.lastWitkinTest);
+    if (this.id < userService.lastWitkinTest) {
+      this.$state.go('witkin-start', {id: userService.lastWitkinTest});
+    } else {
+      userService.lastWitkinTest = this.id;
+    }
     $http.get('tests/test' + this.id + '.json')
       .then(res => {
         const minSize = Math.min($window.innerHeight, $window.innerWidth);
@@ -139,12 +150,41 @@ class WitkinTestController {
       this.$timeout(this.startTimer.bind(this), 1000);
     }
   }
+  showSimpleAgain() {
+    if (this.SHOW_TEST_TIME > 0) {
+      this.SHOW_TEST_TIME = 0;
+      this.returnToTest();
+    } else {
+      this.oneMoreTimeText = 'Повернутися до складної фігури';
+      this.SHOW_TEST_TIME = 10000;
+      this.showLayers(['required']);
+      this.refresh();
+      this.showAgainTimer();
+    }
+  }
+  showAgainTimer() {
+    this.SHOW_TEST_TIME -= 1000;
+    if (this.SHOW_TEST_TIME <= 0) {
+      this.returnToTest();
+    } else {
+      this.$timeout(this.showAgainTimer.bind(this), 1000);
+    }
+  }
+  returnToTest() {
+    this.oneMoreTimeText = 'Ще раз подивитися просту фігуру';
+    this.showLayers(['background', 'lines'].concat(this.answers));
+    this.refresh();
+  }
   showElapsedTime() {
     if (!this.isTestStarted) {
       const currentTime = parseInt(this.getCurrentTime() - this.startTime, 10);
       if (currentTime <= this.MAX_SEARCH_TIME) {
         this.info = `Пошук фігури: ${currentTime} с.`;
         this.$timeout(this.showElapsedTime.bind(this), 1000);
+      } else {
+        this.info = `Час вичерпано!`;
+        this.userService.setWitkinTest(this.id, this.MAX_SEARCH_TIME, this.selectedTime);
+        this.continueTest();
       }
     }
   }
@@ -163,9 +203,11 @@ class WitkinTestController {
   showLayers(layers) {
     this.hideAll();
     layers.forEach(layer => {
-      this.layers[layer].forEach(obj => {
-        obj.visible = true;
-      });
+      if (this.layers[layer] && this.layers[layer].length > 0) {
+        this.layers[layer].forEach(obj => {
+          obj.visible = true;
+        });
+      }
     });
   }
   hideAll() {
@@ -178,22 +220,24 @@ class WitkinTestController {
     }
   }
   onMouseMove(e) {
-    if (this.isTestStarted && e.target.fill !== 'blue') {
+    if (this.isTestStarted && e.target.fill !== this.HIGHLIGHT_COLOR) {
       if (e.target.selected) {
-        e.target.setFill('blue');
+        e.target.setFill(this.HIGHLIGHT_COLOR);
       } else {
-        e.target.setFill('blue');
+        e.target.setFill(this.HIGHLIGHT_COLOR);
       }
       this.refresh();
     }
   }
   onMouseOut(obj) {
     if (this.isTestStarted) {
-      if (obj.selected && obj.fill !== 'red') {
-        obj.setFill('red');
+      if (obj.selected && obj.fill !== this.SELECT_COLOR) {
+        obj.setFill(this.SELECT_COLOR);
+        obj.setStroke('black');
         this.refresh();
       } else if (obj.fill !== 'black') {
         obj.setFill('black');
+        obj.setStroke('');
         this.refresh();
       }
     }
@@ -202,9 +246,9 @@ class WitkinTestController {
     if (this.isTestStarted) {
       e.target.selected = !e.target.selected;
       if (e.target.selected) {
-        e.target.setFill('blue');
+        e.target.setFill(this.HIGHLIGHT_COLOR);
       } else {
-        e.target.setFill('blue');
+        e.target.setFill();
       }
       this.refresh();
     }
@@ -217,22 +261,47 @@ class WitkinTestController {
       this.selectedTime = this.getCurrentTime() - (this.startTime + this.totalTime);
       this.info = 'Відповідь вірна!';
       this.userService.setWitkinTest(this.id, this.totalTime, this.selectedTime);
-      if (this.id < this.TESTS_COUNT) {
-        const nextTest = this.id + 1;
-        this.$state.go('witkin-start', {id: nextTest});
-      } else if (this.userService.getFirstTestName() === 'circles') {
-        // TODO: send results to db
-        this.$state.go('end');
-      } else {
-        this.$state.go('circles');
-      }
+      this.continueTest();
     } else {
       this.reset();
-      this.startTime = this.getCurrentTime();
+      // this.startTime = this.getCurrentTime();
       this.isTestStarted = false;
       this.isTimerStarted = true;
       this.info = 'Не вірно, спробуйте знов';
+      this.showElapsedTime();
     }
+  }
+  continueTest() {
+    if (this.id < this.TESTS_COUNT) {
+      const nextTest = this.id + 1;
+      this.$state.go('witkin-start', {id: nextTest});
+    } else {
+      this.saveResults();
+    }
+  }
+  saveResults() {
+    if (this.$window.XMLHttpRequest) { // Mozilla, Safari, ...
+      this.xhr = new XMLHttpRequest();
+    } else if (this.$window.ActiveXObject) { // IE 8 and older
+// eslint-disable-next-line no-undef
+      this.xhr = new ActiveXObject('Microsoft.XMLHTTP');
+    }
+    const id = this.userService.getUser().id;
+    const data = 'data=' + this.userService.getWitkinResults() + '&id=' + id + '&test=witkin';
+    this.xhr.open('POST', 'http://karelin.s-host.net/php/save_result.php', true);
+    this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    this.xhr.send(data);
+    const prom = new Promise(resolve => {
+      this.xhr.onreadystatechange = () => {
+        if (this.xhr.readyState === 4 && this.xhr.status === 200) {
+          resolve();
+        }
+      };
+    });
+    prom.then(() => {
+      console.log('witkin test finished');
+      this.$state.go('end');
+    });
   }
   checkSelectedFigure() {
     let haveCount = 0;
