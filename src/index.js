@@ -9,6 +9,7 @@ import {witkinTest} from './app/components/witkin/WitkinTest';
 import {witkinHelp} from './app/components/witkin/WitkinHelp';
 import {witkinHelp2} from './app/components/witkin/WitkinHelp2';
 import {assertionTest} from './app/components/assertions/AssertionTest';
+import {results} from './app/components/results/Results';
 import {circlesTest} from './app/components/circles/CirclesTest';
 import {endTest} from './app/components/end/EndTest';
 import './index.styl';
@@ -27,4 +28,5 @@ angular
   .component('witkinHelp2', witkinHelp2)
   .component('assertionTest', assertionTest)
   .component('circlesTest', circlesTest)
+  .component('results', results)
   .component('endTest', endTest);

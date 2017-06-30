@@ -1,0 +1,14 @@
+<div class="marginLeft10">
+  <br>
+  <div class="alert alert-info text-center" ng-hide="$ctrl.isDataReady">
+    Почекайте, триває завантаження результатів....
+  </div>
+  <div ng-show="$ctrl.isDataReady">
+    <h2 class="text-center">Завантажити результати:</h2>
+    <br>
+    <div class="col-sm-6 col-sm-offset-4">
+      <button type="submit" class="btn btn-green" ng-click="$ctrl.saveCirclesResults()">Кола та опитування</button>
+      <button type="submit" class="btn btn-green" ng-click="$ctrl.finishTest()">Тест Віткина</button>
+    </div>
+  </div>
+</div>
