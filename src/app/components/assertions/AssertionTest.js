@@ -1,8 +1,9 @@
 class AssertionTestController {
-  constructor($http, $state, userService) {
+  constructor($http, $state, userService, $window) {
     this.isTestStarted = false;
     this.$http = $http;
     this.$state = $state;
+    this.$window = $window;
     this.userService = userService;
   }
   startTest() {
@@ -69,16 +70,31 @@ class AssertionTestController {
   finishTest(survey) {
     // const resultAsString = angular.toJson(survey.data);
     this.userService.setAssertions(survey.data);
-    // TODO: send results to db
-    if (this.userService.getUser().firstTest === 'witkin') {
-      this.$state.go('end');
-    } else {
-      this.$state.go('witkin');
+    if (this.$window.XMLHttpRequest) { // Mozilla, Safari, ...
+      this.xhr = new XMLHttpRequest();
+    } else if (this.$window.ActiveXObject) { // IE 8 and older
+// eslint-disable-next-line no-undef
+      this.xhr = new ActiveXObject('Microsoft.XMLHTTP');
     }
+    const data = 'data=' + this.userService.getCirclesResults() + '&id=' + this.userService.getUser().id + '&test=circles';
+    this.xhr.open('POST', 'http://karelin.s-host.net/php/save_result.php', true);
+    this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    this.xhr.send(data);
+    const prom = new Promise(resolve => {
+      this.xhr.onreadystatechange = () => {
+        if (this.xhr.readyState === 4 && this.xhr.status === 200) {
+          resolve();
+        }
+      };
+    });
+    prom.then(() => {
+      console.log('circles test finished');
+      this.$state.go('witkin');
+    });
   }
 }
 
-AssertionTestController.$inject = ['$http', '$state', 'userService'];
+AssertionTestController.$inject = ['$http', '$state', 'userService', '$window'];
 export const assertionTest = {
   template: require('./AssertionTest.html'),
   controller: AssertionTestController
