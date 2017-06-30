@@ -41,6 +41,7 @@ class MainController {
       occupation: this.$scope.occupation,
       marital: this.$scope.marital,
       city: this.$scope.city,
+      email: this.$scope.email,
       id: this.id,
       time: moment().valueOf()
     };

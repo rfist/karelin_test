@@ -34,6 +34,10 @@ function routesConfig($stateProvider, $urlRouterProvider, $locationProvider) {
       url: '/circles',
       component: 'circlesTest'
     })
+    .state('results', {
+      url: '/results',
+      component: 'results'
+    })
     .state('end', {
       url: '/end',
       component: 'endTest'
