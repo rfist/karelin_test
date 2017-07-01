@@ -19,9 +19,10 @@ class WitkinTestController {
     this.isTimerStarted = false;
     this.TEXT_STEP_1 = 'Складна фігура';
     this.TEXT_STEP_2 = 'Проста фігура';
-    this.oneMoreTimeText = 'Ще раз подивитися просту фігуру';
+    this.oneMoreTimeText = 'Назад';
     this.MAX_SEARCH_TIME = 120;
     this.canvas = new fabric.Canvas('c');
+    this.countOfUsedHint = 0;
     this.id = parseInt($stateParams.id, 10);
     console.log('lastWitkinTest', userService.lastWitkinTest);
     if (this.id < userService.lastWitkinTest) {
@@ -32,9 +33,12 @@ class WitkinTestController {
     $http.get('tests/test' + this.id + '.json')
       .then(res => {
         const minSize = Math.min($window.innerHeight, $window.innerWidth);
+        this.minSize = minSize;
+        console.log('minSize', minSize);
         $('#c').css({
           height: minSize,
-          width: minSize
+          width: minSize,
+          top: 70
         });
         this.canvas.setHeight(minSize);
         this.canvas.setWidth(minSize);
@@ -49,6 +53,8 @@ class WitkinTestController {
   init() {
     const answersNumbers = [];
     const multipleAnswers = [];
+    const coordsX = [];
+    const coordsY = [];
     this.canvas.getObjects().forEach(obj => {
       // console.log('obj.id', obj.id);
       this.addToLayer(obj);
@@ -75,7 +81,15 @@ class WitkinTestController {
       obj.lockMovementY = true;
       obj.lockRotation = true;
       obj.selectable = obj.id !== 'background';
+      coordsX.push(obj.left);
+      coordsX.push(obj.left + obj.width);
+      coordsY.push(obj.top);
+      coordsY.push(obj.top + obj.height);
     });
+    const w = Math.max.apply(null, coordsX) - Math.min.apply(null, coordsX);
+    const h = Math.max.apply(null, coordsY) - Math.min.apply(null, coordsY);
+    this.realSize = Math.max(h, w) + 90;
+    console.log('realSize', this.realSize);
     multipleAnswers.forEach(obj => {
       answersNumbers.forEach(answer => {
         if (obj.id.includes(answer)) {
@@ -88,13 +102,12 @@ class WitkinTestController {
     this.refresh();
     console.log('init complete');
     this.$timeout(this.showRequired.bind(this), 1000);
-    if (this.id !== 11 && this.id !== 14 && this.id !== 17) {
-      this.zoomIt(1.5);
-    }
+    this.zoomIt(this.minSize / this.realSize);
   }
   zoomIt(factor) {
-    this.canvas.setHeight(this.canvas.getHeight() * factor);
-    this.canvas.setWidth(this.canvas.getWidth() * factor);
+    // this.canvas.setHeight(this.canvas.getHeight() * factor);
+    // this.canvas.setWidth(this.canvas.getWidth() * factor);
+    console.log('zoom to', factor);
     if (this.canvas.backgroundImage) {
       // Need to scale background images as well
       const bi = this.canvas.backgroundImage;
@@ -155,6 +168,7 @@ class WitkinTestController {
       this.SHOW_TEST_TIME = 0;
       this.returnToTest();
     } else {
+      this.countOfUsedHint++;
       this.oneMoreTimeText = 'Повернутися до складної фігури';
       this.SHOW_TEST_TIME = 10000;
       this.showLayers(['required']);
@@ -171,7 +185,7 @@ class WitkinTestController {
     }
   }
   returnToTest() {
-    this.oneMoreTimeText = 'Ще раз подивитися просту фігуру';
+    this.oneMoreTimeText = 'Назад';
     this.showLayers(['background', 'lines'].concat(this.answers));
     this.refresh();
   }
@@ -179,11 +193,12 @@ class WitkinTestController {
     if (!this.isTestStarted) {
       const currentTime = parseInt(this.getCurrentTime() - this.startTime, 10);
       if (currentTime <= this.MAX_SEARCH_TIME) {
-        this.info = `Пошук фігури: ${currentTime} с.`;
+        this.info = `Час пошуку: ${currentTime} с.`;
         this.$timeout(this.showElapsedTime.bind(this), 1000);
       } else {
-        this.info = `Час вичерпано!`;
-        this.userService.setWitkinTest(this.id, this.MAX_SEARCH_TIME, this.selectedTime);
+        console.log('Time expired', currentTime, this.MAX_SEARCH_TIME);
+        toastr.warning(`Час вичерпано!`);
+        this.userService.setWitkinTest(this.id, this.MAX_SEARCH_TIME, this.selectedTime, this.countOfUsedHint);
         this.continueTest();
       }
     }
@@ -259,15 +274,16 @@ class WitkinTestController {
   check() {
     if (this.checkSelectedFigure()) {
       this.selectedTime = this.getCurrentTime() - (this.startTime + this.totalTime);
-      this.info = 'Відповідь вірна!';
-      this.userService.setWitkinTest(this.id, this.totalTime, this.selectedTime);
+      toastr.success('Відповідь вірна!');
+      this.userService.setWitkinTest(this.id, this.totalTime, this.selectedTime, this.countOfUsedHint);
       this.continueTest();
     } else {
       this.reset();
       // this.startTime = this.getCurrentTime();
       this.isTestStarted = false;
       this.isTimerStarted = true;
-      this.info = 'Не вірно, спробуйте знов';
+      toastr.options.closeButton = true;
+      toastr.error('Не вірно, спробуйте знов');
       this.showElapsedTime();
     }
   }
@@ -311,6 +327,9 @@ class WitkinTestController {
         haveCount++;
       }
     });
+    if (haveCount === 0) {
+      return false;
+    }
     const MAX_ANSWERS = 10;
     let answer = 0;
     while (answer <= MAX_ANSWERS) {

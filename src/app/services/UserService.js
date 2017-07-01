@@ -19,8 +19,8 @@ class UserService {
   setCircle(cirlceNumber) {
     this.selectedCircle = cirlceNumber;
   }
-  setWitkinTest(number, totalTime, selectedTime) {
-    this.witkin[number] = [totalTime, selectedTime];
+  setWitkinTest(number, totalTime, selectedTime, countOfUsedHint) {
+    this.witkin[number] = [totalTime, selectedTime, countOfUsedHint];
   }
   setAssertions(assertions) {
     this.assertions = assertions;
