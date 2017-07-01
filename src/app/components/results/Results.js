@@ -34,12 +34,13 @@ class ResultsController {
     });
   }
   saveCirclesResults() {
-    const headers = ['Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення', 'Обраний варіант з колом'];
+    const headers = ['Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення'];
     for (let i = 1; i <= 133; i++) {
       headers.push(i);
     }
+    headers.push('Контекст');
     const result = [headers];
-    const defaultNothing = R.defaultTo('Не вказано');
+    const defaultEmpty = R.defaultTo('Не вказано');
     const fields = ['name', 'sex', 'age', 'education', 'occupation', 'marital', 'city', 'email', 'time'];
     this.data.forEach(obj => {
       if (obj.data) {
@@ -57,16 +58,16 @@ class ResultsController {
         if (field === 'time') {
           item.push(moment(obj.data[field]).format(`Do MMM YY`));
         } else {
-          item.push(defaultNothing(obj.data[field]));
+          item.push(defaultEmpty(obj.data[field]));
         }
       });
       // колонка, какой круг выбран
-      item.push(defaultNothing(obj.circles.selectedCircle));
       if (obj.circles.assertions) {
         for (let i = 1; i <= 133; i++) {
-          item.push(defaultNothing(obj.circles.assertions[i]));
+          item.push(defaultEmpty(obj.circles.assertions[i]));
         }
       }
+      item.push(defaultEmpty(obj.circles.selectedCircle));
       result.push(item);
     });
     console.log('result', result);
@@ -79,6 +80,71 @@ class ResultsController {
 
     const file = new File([csvContent], 'circles.csv', {type: 'text/csv;charset=utf-8'});
     saveAs(file, 'circles.csv');
+  }
+  saveWitkinResults() {
+    const headers = ['Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення'];
+    for (let i = 1; i <= 24; i++) {
+      headers.push(i);
+    }
+    headers.push('Кількість використаних підказок');
+    headers.push('Середній час за перші 12 завдань');
+    headers.push('Середній час за останні 12 завдань');
+    headers.push('Сумарний час');
+    const result = [headers];
+    const fields = ['name', 'sex', 'age', 'education', 'occupation', 'marital', 'city', 'email', 'time'];
+    let i = 0;
+    const defaultNothing = R.defaultTo(0);
+    const defaultEmpty = R.defaultTo('Не вказано');
+    this.data.forEach(obj => {
+      const item = [];
+      if (obj.data) {
+        obj.data = angular.fromJson(obj.data);
+      } else {
+        obj.data = {};
+      }
+      fields.forEach(field => {
+        if (field === 'time') {
+          item.push(moment(obj.data[field]).format(`Do MMM YY`));
+        } else {
+          item.push(defaultEmpty(obj.data[field]));
+        }
+      });
+      if (obj.witkin) {
+        const witkin = R.values(angular.fromJson(obj.witkin).witkin);
+        console.log('witkin', witkin);
+        if (witkin.length === 24) {
+          let totalTime12 = 0;
+          let totalTime24 = 0;
+          let hintCounts = 0;
+          for (i = 0; i <= 11; i++) {
+            item.push(witkin[i][0]);
+            totalTime12 += witkin[i][0];
+            hintCounts += defaultNothing(witkin[i][2]);
+          }
+          for (i = 12; i <= 23; i++) {
+            item.push(witkin[i][0]);
+            totalTime24 += witkin[i][0];
+            hintCounts += defaultNothing(witkin[i][2]);
+          }
+          item.push(hintCounts);
+          item.push(totalTime12 / 12);
+          item.push(totalTime24 / 12);
+          item.push(totalTime12 + totalTime24);
+          console.log('kkkk', totalTime12 / 12, totalTime24 / 12, totalTime12 + totalTime24, hintCounts);
+        }
+      }
+      result.push(item);
+    });
+    console.log('result', result);
+    let dataString = '';
+    let csvContent = '';
+    result.forEach((infoArray, index) => {
+      dataString = infoArray.join(';');
+      csvContent += index < result.length ? dataString + '\n' : dataString;
+    });
+
+    const file = new File([csvContent], 'witkin.csv', {type: 'text/csv;charset=utf-8'});
+    saveAs(file, 'witkin.csv');
   }
 }
 
