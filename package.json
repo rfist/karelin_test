@@ -75,6 +75,7 @@
       "fabric": true,
       "$": true,
       "R": true,
+      "toastr": true,
       "saveAs": true,
       "Survey": true,
       "moment": true
