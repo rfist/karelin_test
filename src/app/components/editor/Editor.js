@@ -300,8 +300,8 @@ class EditorController {
           obj.left -= 150;
           break;
         case 11:
-          obj.top -= 300;
-          obj.left -= 150;
+          obj.top -= 335;
+          obj.left -= 170;
           break;
         case 12:
           obj.top -= 450;

@@ -38,7 +38,7 @@ class WitkinTestController {
         $('#c').css({
           height: minSize,
           width: minSize,
-          top: 70
+          top: 60
         });
         this.canvas.setHeight(minSize);
         this.canvas.setWidth(minSize);
@@ -283,7 +283,7 @@ class WitkinTestController {
       this.isTestStarted = false;
       this.isTimerStarted = true;
       toastr.options.closeButton = true;
-      toastr.error('Не вірно, спробуйте знов');
+      toastr.error('Невірно, спробуйте знов');
       this.showElapsedTime();
     }
   }
@@ -334,20 +334,22 @@ class WitkinTestController {
     let answer = 0;
     while (answer <= MAX_ANSWERS) {
       let needCount = 0;
+      let totalElementsCount = 0;
       // eslint-disable-next-line
       this.answers.forEach(answerLayer => {
         if (answerLayer.indexOf('_' + answer) > -1) {
           this.layers[answerLayer].forEach(obj => {
+            totalElementsCount++;
             if (obj.selected) {
               needCount++;
             }
           });
         }
       });
-      if (needCount === haveCount) {
+      if (needCount === haveCount && totalElementsCount === haveCount) {
         result = true;
       }
-      console.log('answer', answer, 'needCount', needCount);
+      console.log('answer', answer, 'needCount', needCount, 'totalElements', totalElementsCount);
       answer++;
     }
     // this.answers.forEach(answerLayer => {
@@ -370,6 +372,7 @@ class WitkinTestController {
       this.layers[layer].forEach(obj => {
         obj.selected = false;
         obj.setFill('black');
+        obj.setStroke('');
       });
     });
     this.info = '';
