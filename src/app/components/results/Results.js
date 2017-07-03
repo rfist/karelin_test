@@ -78,7 +78,7 @@ class ResultsController {
       csvContent += index < result.length ? dataString + '\n' : dataString;
     });
 
-    const file = new File([csvContent], 'circles.csv', {type: 'text/csv;charset=utf-8'});
+    const file = new File([csvContent], 'circles.csv', {type: 'text/csv;charset=utf-8,\uFEFF'});
     saveAs(file, 'circles.csv');
   }
   saveWitkinResults() {
@@ -117,20 +117,19 @@ class ResultsController {
           let totalTime24 = 0;
           let hintCounts = 0;
           for (i = 0; i <= 11; i++) {
-            item.push(witkin[i][0]);
+            item.push(witkin[i][0].toFixed(1));
             totalTime12 += witkin[i][0];
             hintCounts += defaultNothing(witkin[i][2]);
           }
           for (i = 12; i <= 23; i++) {
-            item.push(witkin[i][0]);
+            item.push(witkin[i][0].toFixed(1));
             totalTime24 += witkin[i][0];
             hintCounts += defaultNothing(witkin[i][2]);
           }
           item.push(hintCounts);
-          item.push(totalTime12 / 12);
-          item.push(totalTime24 / 12);
-          item.push(totalTime12 + totalTime24);
-          console.log('kkkk', totalTime12 / 12, totalTime24 / 12, totalTime12 + totalTime24, hintCounts);
+          item.push((totalTime12 / 12).toFixed(1));
+          item.push((totalTime24 / 12).toFixed(1));
+          item.push(totalTime12.toFixed(1) + totalTime24.toFixed(1));
         }
       }
       result.push(item);
@@ -143,7 +142,7 @@ class ResultsController {
       csvContent += index < result.length ? dataString + '\n' : dataString;
     });
 
-    const file = new File([csvContent], 'witkin.csv', {type: 'text/csv;charset=utf-8'});
+    const file = new File([csvContent], 'witkin.csv', {type: 'text/csv;charset=utf-8,\uFEFF'});
     saveAs(file, 'witkin.csv');
   }
 }
