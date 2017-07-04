@@ -3,6 +3,8 @@ class ResultsController {
     this.isDataReady = false;
     this.$window = $window;
     this.$scope = $scope;
+    this.isCirclesSaved = false;
+    this.isWitkinSaved = false;
     this.connectToServer();
   }
   connectToServer() {
@@ -81,6 +83,7 @@ class ResultsController {
 
     const file = new File([csvContent], 'circles.csv', {type: 'text/csv;charset=utf-8,\uFEFF'});
     saveAs(file, 'circles.csv');
+    this.isCirclesSaved = true;
   }
   saveWitkinResults() {
     const headers = ['Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення'];
@@ -145,6 +148,15 @@ class ResultsController {
 
     const file = new File([csvContent], 'witkin.csv', {type: 'text/csv;charset=utf-8,\uFEFF'});
     saveAs(file, 'witkin.csv');
+    this.isWitkinSaved = true;
+  }
+  checkIfAllSaved() {
+    return !(this.isCirclesSaved && this.isWitkinSaved);
+  }
+  clearResults() {
+    this.xhr.open('POST', 'http://karelin.s-host.net/php/truncate.php', true);
+    this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    this.xhr.send();
   }
 }
 
