@@ -8,8 +8,10 @@ class CirclesTestController {
     this.selected = number;
   }
   nextTest() {
-    this.userService.setCircle(this.selected);
-    this.$state.go('assertions');
+    if (this.selected !== 0) {
+      this.userService.setCircle(this.selected);
+      this.$state.go('assertions');
+    }
   }
   finishTest() {
     // TODO: rejected test
