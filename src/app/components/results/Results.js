@@ -24,8 +24,9 @@ class ResultsController {
       };
     });
     prom.then(result => {
-      console.log('result', result);
-      this.data = result;
+      const desc = (a, b) => b.date - a.date;
+      this.data = R.sort(desc, result);
+      console.log('result', this.data);
       const lastNumber = Math.max.apply(this, R.pluck('id')(result));
       this.id = lastNumber + 1;
       this.isDataReady = true;
