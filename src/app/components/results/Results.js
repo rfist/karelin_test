@@ -73,7 +73,7 @@ class ResultsController {
       item.push(defaultEmpty(obj.circles.selectedCircle));
       result.push(item);
     });
-    console.log('result', result);
+    console.log('saveCirclesResults', result);
     let dataString = '';
     let csvContent = '';
     result.forEach((infoArray, index) => {
