@@ -7,11 +7,11 @@
 </div>
 <hr>
 <div class="container">
-  <form class="form-horizontal" role="form">
+  <form class="form-horizontal" role="form" name="userForm">
     <div class="form-group">
-      <label for="firstName" class="col-sm-3 control-label">Ім'я</label>
+      <label for="firstName" class="col-sm-3 control-label required-field">Ім'я</label>
       <div class="col-sm-9">
-        <input type="text" id="firstName" placeholder="Іван" class="form-control" autofocus ng-model="name">
+        <input type="text" id="firstName" placeholder="Іван" class="form-control" autofocus ng-model="name" required>
         <span class="help-block">П.І.Б. або псевдонім</span>
       </div>
     </div>
@@ -25,9 +25,9 @@
       </div>
     </div>
     <div class="form-group">
-      <label for="age" class="col-sm-3 control-label">Вік</label>
+      <label for="age" class="col-sm-3 control-label required-field">Вік</label>
       <div class="col-sm-9">
-        <input type="number" id="age" placeholder="25" class="form-control" autofocus ng-model="age">
+        <input type="number" id="age" placeholder="25" class="form-control" autofocus ng-model="age" required>
       </div>
     </div>
     <div class="form-group">
@@ -62,12 +62,12 @@
       </div>
     </div>
     <div class="alert alert-info text-center">
-      <strong>Гарантуємо повну конфіденційність щодо наданої Вами інформації</strong>
+      <strong>Гарантуємо повну конфіденційність щодо наданої вами інформації</strong>
     </div>
     <hr>
     <div class="form-group">
       <div class="col-sm-12">
-        <button type="submit" class="btn btn-primary btn-block" ng-click="$ctrl.startTest()">Розпочати тест</button>
+        <button type="submit" class="btn btn-primary btn-block" ng-click="$ctrl.startTest()" ng-disabled="userForm.$invalid">Розпочати тест</button>
       </div>
     </div>
   </form>
