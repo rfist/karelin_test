@@ -14,7 +14,6 @@ class WitkinTestController {
     this.SHOW_REQUIRED_TIME = 10000;
     this.startTime = 0;
     this.selectedTime = 0;
-    this.totalTime = 0;
     this.isTestStarted = false;
     this.isTimerStarted = false;
     this.TEXT_STEP_1 = 'Складна фігура';
@@ -204,8 +203,8 @@ class WitkinTestController {
     }
   }
   startTest() {
-    this.totalTime += (this.getCurrentTime() - this.startTime);
-    this.info = ''; // this.totalTime;
+    this.passedTime = this.getCurrentTime() - this.startTime;
+    this.info = '';
     this.isTestStarted = true;
   }
   addToLayer(obj) {
@@ -273,13 +272,14 @@ class WitkinTestController {
   }
   check() {
     if (this.checkSelectedFigure()) {
-      this.selectedTime = this.getCurrentTime() - (this.startTime + this.totalTime);
+      this.selectedTime = this.getCurrentTime() - (this.startTime + this.passedTime);
       toastr.success('Відповідь вірна!');
-      this.userService.setWitkinTest(this.id, this.totalTime, this.selectedTime, this.countOfUsedHint);
+      this.userService.setWitkinTest(this.id, this.passedTime, this.selectedTime, this.countOfUsedHint);
+      // console.log(`Час на розшук ${this.passedTime} час на виділення ${this.selectedTime}`);
       this.continueTest();
     } else {
       this.reset();
-      // this.startTime = this.getCurrentTime();
+      this.startTime = this.getCurrentTime() - this.passedTime;
       this.isTestStarted = false;
       this.isTimerStarted = true;
       toastr.options.closeButton = true;
