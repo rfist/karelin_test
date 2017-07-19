@@ -37,11 +37,12 @@ class ResultsController {
     });
   }
   saveCirclesResults() {
-    const headers = ['Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення'];
+    const headers = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення'];
     for (let i = 1; i <= 133; i++) {
       headers.push(i);
     }
     headers.push('Контекст');
+    headers.push('Тест Віткіна');
     const result = [headers];
     const defaultEmpty = R.defaultTo('Не вказано');
     const fields = ['name', 'sex', 'age', 'education', 'occupation', 'marital', 'city', 'email', 'time'];
@@ -57,6 +58,7 @@ class ResultsController {
         obj.circles = {};
       }
       const item = [];
+      item.push(obj.id);
       fields.forEach(field => {
         if (field === 'time') {
           item.push(moment(obj.data[field]).format(`Do MMM YY`));
@@ -71,6 +73,9 @@ class ResultsController {
         }
       }
       item.push(defaultEmpty(obj.circles.selectedCircle));
+      if (obj.witkin !== '') {
+        item.push('+');
+      }
       result.push(item);
     });
     console.log('saveCirclesResults', result);
@@ -86,7 +91,7 @@ class ResultsController {
     this.isCirclesSaved = true;
   }
   saveWitkinResults() {
-    const headers = ['Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення'];
+    const headers = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення'];
     for (let i = 1; i <= 24; i++) {
       headers.push(i);
     }
@@ -101,6 +106,7 @@ class ResultsController {
     const defaultEmpty = R.defaultTo('Не вказано');
     this.data.forEach(obj => {
       const item = [];
+      item.push(obj.id);
       if (obj.data) {
         obj.data = angular.fromJson(obj.data);
       } else {
