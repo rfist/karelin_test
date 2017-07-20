@@ -35,7 +35,7 @@ function routesConfig($stateProvider, $urlRouterProvider, $locationProvider) {
       component: 'circlesTest'
     })
     .state('results', {
-      url: '/results',
+      url: '/890720cb2de3d205e39b2dfaeee4add6',
       component: 'results'
     })
     .state('end', {

@@ -1,11 +1,12 @@
 class ResultsController {
   constructor($state, userService, $window, $scope) {
     this.isDataReady = false;
+    this.isAuthorized = false;
     this.$window = $window;
     this.$scope = $scope;
     this.isCirclesSaved = false;
     this.isWitkinSaved = false;
-    this.connectToServer();
+    // this.connectToServer();
   }
   connectToServer() {
     if (this.$window.XMLHttpRequest) { // Mozilla, Safari, ...
@@ -163,6 +164,17 @@ class ResultsController {
     this.xhr.open('POST', 'http://karelin.s-host.net/php/truncate.php', true);
     this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     this.xhr.send();
+  }
+
+  login() {
+    console.log('login', this.$scope.password);
+    // eslint-disable-next-line
+    if (CryptoJS.SHA256(this.$scope.password).toString() === '16d2b85db8b68ea3d0d8f6ed4d73724a51ad62d4cae0d5311abdf3541b94244c') {
+      console.log('Authorized!');
+      this.isAuthorized = true;
+      this.connectToServer();
+    }
+    this.$scope.password = '';
   }
 }
 
