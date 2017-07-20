@@ -78,7 +78,8 @@
       "toastr": true,
       "saveAs": true,
       "Survey": true,
-      "moment": true
+      "moment": true,
+      "CryptoJS": true
     },
     "root": true,
     "env": {
