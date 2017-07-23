@@ -1,12 +1,12 @@
 class ResultsController {
   constructor($state, userService, $window, $scope) {
     this.isDataReady = false;
-    this.isAuthorized = false;
+    this.isAuthorized = true;
     this.$window = $window;
     this.$scope = $scope;
     this.isCirclesSaved = false;
     this.isWitkinSaved = false;
-    // this.connectToServer();
+    this.connectToServer();
   }
   connectToServer() {
     if (this.$window.XMLHttpRequest) { // Mozilla, Safari, ...
@@ -38,6 +38,23 @@ class ResultsController {
     });
   }
   saveCirclesResults() {
+    const ids = [];
+    const uniqe = [];
+    const contextStatistics = {};
+    this.data.forEach(obj => {
+      ids.push(obj.id);
+    });
+    ids.forEach(id => {
+      let count = 0;
+      for (let i = 0; i < ids.length; ++i) {
+        if (ids[i] === id) {
+          count++;
+        }
+      }
+      if (count === 1) {
+        uniqe.push(id);
+      }
+    });
     const headers = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення'];
     for (let i = 1; i <= 133; i++) {
       headers.push(i);
@@ -73,13 +90,32 @@ class ResultsController {
           item.push(defaultEmpty(obj.circles.assertions[i]));
         }
       }
-      item.push(defaultEmpty(obj.circles.selectedCircle));
+      const selectedCircle = defaultEmpty(obj.circles.selectedCircle);
+      item.push(selectedCircle);
       if (obj.witkin !== '') {
         item.push('+');
       }
-      result.push(item);
+      if (uniqe.includes(obj.id)) {
+        if (angular.isNumber(selectedCircle)) {
+          if (contextStatistics[selectedCircle]) {
+            contextStatistics[selectedCircle]++;
+          } else {
+            contextStatistics[selectedCircle] = 1;
+          }
+        } else if (contextStatistics['Не вказано']) {
+          contextStatistics['Не вказано']++;
+        } else {
+          contextStatistics['Не вказано'] = 1;
+        }
+        result.push(item);
+      }
     });
+    result.push([]);
+    result.push(['Статистика по обраному контексту:']);
+    result.push(R.keys(contextStatistics));
+    result.push(R.values(contextStatistics));
     console.log('saveCirclesResults', result);
+    console.log('contextStatistics', contextStatistics);
     let dataString = '';
     let csvContent = '';
     result.forEach((infoArray, index) => {
@@ -96,15 +132,36 @@ class ResultsController {
     for (let i = 1; i <= 24; i++) {
       headers.push(i);
     }
+    headers.push('Контекст');
     headers.push('Кількість використаних підказок');
     headers.push('Середній час за перші 12 завдань');
     headers.push('Середній час за останні 12 завдань');
     headers.push('Сумарний час');
+    // headers.push('Середній час, витрачений між натисканням кнопки «Фігуру знайдено» і кнопки «Перевірити»');
     const result = [headers];
     const fields = ['name', 'sex', 'age', 'education', 'occupation', 'marital', 'city', 'email', 'time'];
     let i = 0;
     const defaultNothing = R.defaultTo(0);
     const defaultEmpty = R.defaultTo('Не вказано');
+    const ids = [];
+    const uniqe = [];
+    const contextStatistics = {};
+    this.data.forEach(obj => {
+      ids.push(obj.id);
+    });
+    ids.forEach(id => {
+      let count = 0;
+      for (let i = 0; i < ids.length; ++i) {
+        if (ids[i] === id) {
+          count++;
+        }
+      }
+      if (count === 1) {
+        uniqe.push(id);
+      }
+    });
+    console.log('ids', ids);
+    console.log('uniqe', uniqe);
     this.data.forEach(obj => {
       const item = [];
       item.push(obj.id);
@@ -113,6 +170,12 @@ class ResultsController {
       } else {
         obj.data = {};
       }
+      if (obj.circles) {
+        obj.circles = angular.fromJson(obj.circles);
+      } else {
+        obj.circles = {};
+      }
+      const selectedCircle = defaultEmpty(obj.circles.selectedCircle);
       fields.forEach(field => {
         if (field === 'time') {
           item.push(moment(obj.data[field]).format(`Do MMM YY`));
@@ -122,29 +185,52 @@ class ResultsController {
       });
       if (obj.witkin) {
         const witkin = R.values(angular.fromJson(obj.witkin).witkin);
-        console.log('witkin', witkin);
+        // console.log('witkin', witkin);
         if (witkin.length === 24) {
           let totalTime12 = 0;
           let totalTime24 = 0;
+          let totalSelectedTime = 0;
           let hintCounts = 0;
           for (i = 0; i <= 11; i++) {
             item.push(witkin[i][0].toFixed(1));
             totalTime12 += witkin[i][0];
             hintCounts += defaultNothing(witkin[i][2]);
+            totalSelectedTime += defaultNothing(witkin[i][1]);
           }
           for (i = 12; i <= 23; i++) {
             item.push(witkin[i][0].toFixed(1));
             totalTime24 += witkin[i][0];
             hintCounts += defaultNothing(witkin[i][2]);
+            totalSelectedTime += defaultNothing(witkin[i][1]);
           }
+          item.push(selectedCircle);
           item.push(hintCounts);
           item.push((totalTime12 / 12).toFixed(1));
           item.push((totalTime24 / 12).toFixed(1));
           item.push(totalTime12.toFixed(1) + totalTime24.toFixed(1));
+          // item.push((totalSelectedTime / 24).toFixed(1));
+          console.log('totalSelectedTime', totalSelectedTime);
+        }
+        if (uniqe.includes(obj.id)) {
+          if (angular.isNumber(selectedCircle)) {
+            if (contextStatistics[selectedCircle]) {
+              contextStatistics[selectedCircle]++;
+            } else {
+              contextStatistics[selectedCircle] = 1;
+            }
+          } else if (contextStatistics['Не вказано']) {
+            contextStatistics['Не вказано']++;
+          } else {
+            contextStatistics['Не вказано'] = 1;
+          }
+          result.push(item);
         }
       }
-      result.push(item);
     });
+    result.push([]);
+    result.push(['Статистика по обраному контексту:']);
+    result.push(R.keys(contextStatistics));
+    result.push(R.values(contextStatistics));
     console.log('result', result);
     let dataString = '';
     let csvContent = '';

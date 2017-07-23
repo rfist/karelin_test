@@ -6,7 +6,14 @@ class MainController {
     this.$window = $window;
     this.id = -1;
     this.connectToServer();
-    console.log('service test');
+    this.checkState();
+    console.log('service test', this.$state.current.name);
+  }
+  checkState() {
+    this.userService.load();
+    if (this.userService.lastState !== '' && this.userService.lastState !== this.$state.current.name) {
+      this.$state.go(this.userService.lastState);
+    }
   }
   connectToServer() {
     if (this.$window.XMLHttpRequest) { // Mozilla, Safari, ...
@@ -33,6 +40,7 @@ class MainController {
     });
   }
   startTest() {
+    this.userService.innerId = moment().valueOf() + '_' + Math.floor((Math.random() * 1000) + 1);
     const user = {
       name: this.$scope.name,
       sex: this.$scope.sex,
@@ -42,7 +50,6 @@ class MainController {
       marital: this.$scope.marital,
       city: this.$scope.city,
       email: this.$scope.email,
-      id: this.id,
       time: moment().valueOf()
     };
     user.firstTest = 'circles'; // now circles always is first
@@ -52,8 +59,8 @@ class MainController {
     //   user.firstTest = 'witkin';
     // }
     this.userService.setUser(user);
-    const data = 'data=' + angular.toJson(user) + '&id=' + this.id + '&date=' + moment().valueOf() + '&first_test=' + this.userService.getFirstTestName();
-    this.xhr.open('POST', 'http://karelin.s-host.net/php/add.php', true);
+    const data = 'data=' + angular.toJson(user) + '&inner_id=' + this.userService.innerId + '&date=' + moment().valueOf() + '&first_test=' + this.userService.getFirstTestName();
+    this.xhr.open('POST', 'http://karelin.s-host.net/php/register.php', true);
     this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     this.xhr.send(data);
     console.log('data', data);
@@ -66,7 +73,11 @@ class MainController {
     });
     prom.then(result => {
       console.log('save results to server', result);
-      console.log('user start', user.firstTest);
+      result = angular.fromJson(result);
+      this.userService.id = result[0].id;
+      console.log('user', this.userService.id, user.firstTest);
+      this.userService.lastState = user.firstTest;
+      this.userService.save();
       this.$state.go(user.firstTest);
     });
     // this.$state.go('witkin', {id: 1});

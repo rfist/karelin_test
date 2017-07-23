@@ -3,9 +3,13 @@ class UserService {
     this.lastWitkinTest = 0;
     this.lastNumber = 0;
     this.selectedCircle = 0;
-    this.user = {firstTest: 'unknown'};
+    this.user = {firstTest: 'unknown', unregistered: true};
     this.assertions = {};
     this.witkin = {};
+    this.id = 0;
+    this.innerId = 0;
+    this.lastState = '';
+    this.loaded = false;
   }
   get currentNumber() {
     return this.lastNumber + 1;
@@ -19,8 +23,14 @@ class UserService {
   setCircle(cirlceNumber) {
     this.selectedCircle = cirlceNumber;
   }
-  setWitkinTest(number, totalTime, selectedTime, countOfUsedHint) {
-    this.witkin[number] = [totalTime, selectedTime, countOfUsedHint];
+  setWitkinTest(number, totalTime, selectedTime, countOfUsedHint, timeBeforeFirstClick) {
+    this.witkin[number] = [totalTime, selectedTime, countOfUsedHint, timeBeforeFirstClick];
+  }
+  setWitkinHistory(number, wrongAnswers, rightAnswer, percent) {
+    if (!this.witkin.history) {
+      this.witkin.history = {};
+    }
+    this.witkin.history[number] = {wrongAnswers, rightAnswer, percent};
   }
   setAssertions(assertions) {
     this.assertions = assertions;
@@ -38,6 +48,29 @@ class UserService {
   }
   getFirstTestName() {
     return this.user.firstTest;
+  }
+  save() {
+    localStorage.setItem('user', angular.toJson(this));
+  }
+  load() {
+    if (!this.loaded) {
+      Object.assign(this, angular.fromJson(localStorage.getItem('user')));
+      this.loaded = true;
+      console.log('load user', this);
+    }
+  }
+  clear() {
+    localStorage.removeItem('user');
+    this.lastWitkinTest = 0;
+    this.lastNumber = 0;
+    this.selectedCircle = 0;
+    this.user = {firstTest: 'unknown'};
+    this.assertions = {};
+    this.witkin = {};
+    this.id = 0;
+    this.innerId = 0;
+    this.lastState = '';
+    this.loaded = true;
   }
 }
 

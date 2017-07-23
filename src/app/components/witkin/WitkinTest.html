@@ -1,6 +1,6 @@
 <canvas class="canvas" id="c" width="300" height="300"></canvas>
 <br>
-<div class="menu">
+<div class="menu" style="top: 25px">
   <div class="btn-group">
     <button type="submit" class="btn btn-green" ng-click="$ctrl.startTest()" ng-hide="($ctrl.isTestStarted || !$ctrl.isTimerStarted) || $ctrl.SHOW_TEST_TIME > 0">ФІГУРУ ЗНАЙДЕНО</button>
     <button type="submit" class="btn btn-primary" ng-click="$ctrl.showSimpleAgain()" ng-hide="$ctrl.isTestStarted || !$ctrl.isTimerStarted">{{$ctrl.oneMoreTimeText}}</button>
