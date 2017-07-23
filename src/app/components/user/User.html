@@ -1,0 +1,8 @@
+<div class="component row" style="background-color: #00695C; height: 25px">
+  <div class="col-sm-4 text-left">
+    <span style="color: white">&nbsp; Респондент: {{$ctrl.userName}} </span>
+  </div>
+  <div class="text-right col-sm-4 col-sm-offset-4" ng-show="isCirlcesComplete">
+    <a href ng-click="$ctrl.finishTest()" class="user">Прервати тестування</a> <br />
+  </div>
+</div>

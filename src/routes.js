@@ -10,29 +10,55 @@ function routesConfig($stateProvider, $urlRouterProvider, $locationProvider) {
       url: '/',
       component: 'app'
     })
+    .state('start', {
+      url: '/start',
+      component: 'startPage'
+    })
     .state('editor', {
       url: '/editor',
       component: 'editor'
     })
     .state('witkin-start', {
       url: '/visual_test:id',
-      component: 'visualTest'
+      views: {
+        user: 'userComponent',
+        app: 'visualTest'
+      }
     })
     .state('witkin', {
       url: '/witkin-help',
-      component: 'witkinHelp'
+      views: {
+        user: 'userComponent',
+        app: 'witkinHelp'
+      }
     })
     .state('witkin-before-start', {
       url: '/witkin-help2',
-      component: 'witkinHelp2'
+      views: {
+        user: 'userComponent',
+        app: 'witkinHelp2'
+      }
     })
     .state('assertions', {
       url: '/assertions',
-      component: 'assertionTest'
+      views: {
+        user: 'userComponent',
+        app: 'assertionTest'
+      }
     })
     .state('circles', {
       url: '/circles',
-      component: 'circlesTest'
+      views: {
+        user: 'userComponent',
+        app: 'circlesTest'
+      }
+    })
+    .state('restore', {
+      url: '/restore',
+      views: {
+        user: 'userComponent',
+        app: 'resume'
+      }
     })
     .state('results', {
       url: '/890720cb2de3d205e39b2dfaeee4add6',

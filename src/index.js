@@ -14,6 +14,9 @@ import {circlesTest} from './app/components/circles/CirclesTest';
 import {endTest} from './app/components/end/EndTest';
 import './index.styl';
 import UserService from './app/services/UserService';
+import {user} from './app/components/user/User';
+import {startPage} from './app/components/start/StartPage';
+import {resume} from './app/components/resume/Resume';
 
 export const app = 'app';
 
@@ -29,4 +32,7 @@ angular
   .component('assertionTest', assertionTest)
   .component('circlesTest', circlesTest)
   .component('results', results)
+  .component('userComponent', user)
+  .component('startPage', startPage)
+  .component('resume', resume)
   .component('endTest', endTest);

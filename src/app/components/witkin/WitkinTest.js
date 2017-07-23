@@ -6,6 +6,8 @@ class WitkinTestController {
     this.info = '';
     this.layers = {};
     this.answers = [];
+    this.wrongAnswers = [];
+    this.rightAnswer = [];
     this.$timeout = $timeout;
     this.$state = $state;
     this.$window = $window;
@@ -22,8 +24,14 @@ class WitkinTestController {
     this.MAX_SEARCH_TIME = 120;
     this.canvas = new fabric.Canvas('c');
     this.countOfUsedHint = 0;
+    this.timeBeforeFirstClick = 0;
+    this.percent = 0;
     this.id = parseInt($stateParams.id, 10);
+    this.userService.load();
     console.log('lastWitkinTest', userService.lastWitkinTest);
+    if (this.userService.user.unregistered) {
+      this.$state.go('app');
+    }
     if (this.id < userService.lastWitkinTest) {
       this.$state.go('witkin-start', {id: userService.lastWitkinTest});
     } else {
@@ -54,8 +62,11 @@ class WitkinTestController {
     const multipleAnswers = [];
     const coordsX = [];
     const coordsY = [];
+    let count = 0;
     this.canvas.getObjects().forEach(obj => {
       // console.log('obj.id', obj.id);
+      obj.label = count;
+      count++;
       this.addToLayer(obj);
       if (obj.id === 'lines' || obj.id.includes('answer') || obj.id.includes('multiple')) {
         obj.on('mousemove', this.onMouseMove.bind(this));
@@ -79,7 +90,7 @@ class WitkinTestController {
       obj.lockMovementX = true;
       obj.lockMovementY = true;
       obj.lockRotation = true;
-      obj.selectable = obj.id !== 'background';
+      obj.selectable = false;
       coordsX.push(obj.left);
       coordsX.push(obj.left + obj.width);
       coordsY.push(obj.top);
@@ -197,7 +208,8 @@ class WitkinTestController {
       } else {
         console.log('Time expired', currentTime, this.MAX_SEARCH_TIME);
         toastr.warning(`Час вичерпано!`);
-        this.userService.setWitkinTest(this.id, this.MAX_SEARCH_TIME, this.selectedTime, this.countOfUsedHint);
+        this.userService.setWitkinTest(this.id, this.MAX_SEARCH_TIME, this.selectedTime, this.countOfUsedHint, this.timeBeforeFirstClick);
+        this.userService.setWitkinHistory(this.id, this.wrongAnswers, this.rightAnswer, 0);
         this.continueTest();
       }
     }
@@ -206,6 +218,8 @@ class WitkinTestController {
     this.passedTime = this.getCurrentTime() - this.startTime;
     this.info = '';
     this.isTestStarted = true;
+    this.timeBeforeFirstClick = 0;
+    this.timeButtonFindWasClicked = this.getCurrentTime();
   }
   addToLayer(obj) {
     const id = obj.id;
@@ -258,6 +272,9 @@ class WitkinTestController {
   }
   onMouseDown(e) {
     if (this.isTestStarted) {
+      if (this.timeBeforeFirstClick === 0) {
+        this.timeBeforeFirstClick = this.getCurrentTime() - this.timeButtonFindWasClicked;
+      }
       e.target.selected = !e.target.selected;
       if (e.target.selected) {
         e.target.setFill(this.HIGHLIGHT_COLOR);
@@ -274,7 +291,8 @@ class WitkinTestController {
     if (this.checkSelectedFigure()) {
       this.selectedTime = this.getCurrentTime() - (this.startTime + this.passedTime);
       toastr.success('Відповідь вірна!');
-      this.userService.setWitkinTest(this.id, this.passedTime, this.selectedTime, this.countOfUsedHint);
+      this.userService.setWitkinTest(this.id, this.passedTime, this.selectedTime, this.countOfUsedHint, this.timeBeforeFirstClick);
+      this.userService.setWitkinHistory(this.id, this.wrongAnswers, this.rightAnswer, this.percent);
       // console.log(`Час на розшук ${this.passedTime} час на виділення ${this.selectedTime}`);
       this.continueTest();
     } else {
@@ -290,6 +308,8 @@ class WitkinTestController {
   continueTest() {
     if (this.id < this.TESTS_COUNT) {
       const nextTest = this.id + 1;
+      this.userService.lastWitkinTest = nextTest;
+      this.userService.save();
       this.$state.go('witkin-start', {id: nextTest});
     } else {
       this.saveResults();
@@ -302,9 +322,8 @@ class WitkinTestController {
 // eslint-disable-next-line no-undef
       this.xhr = new ActiveXObject('Microsoft.XMLHTTP');
     }
-    const id = this.userService.getUser().id;
-    const data = 'data=' + this.userService.getWitkinResults() + '&id=' + id + '&test=witkin';
-    this.xhr.open('POST', 'http://karelin.s-host.net/php/save_result.php', true);
+    const data = 'data=' + this.userService.getWitkinResults() + '&id=' + this.userService.id + '&inner_id=' + this.userService.innerId + '&test=witkin';
+    this.xhr.open('POST', 'http://karelin.s-host.net/php/update.php', true);
     this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     this.xhr.send(data);
     const prom = new Promise(resolve => {
@@ -322,9 +341,15 @@ class WitkinTestController {
   checkSelectedFigure() {
     let haveCount = 0;
     let result = false;
+    let isSpared = false;
+    const selectedItems = [];
     this.canvas.getObjects().forEach(obj => {
       if (obj.selected) {
         haveCount++;
+        selectedItems.push(obj.label);
+        if (obj.id.indexOf('answer') === -1) {
+          isSpared = true;
+        }
       }
     });
     if (haveCount === 0) {
@@ -333,7 +358,7 @@ class WitkinTestController {
     const MAX_ANSWERS = 10;
     let answer = 0;
     while (answer <= MAX_ANSWERS) {
-      let needCount = 0;
+      let currentSelectedFromNeeded = 0;
       let totalElementsCount = 0;
       // eslint-disable-next-line
       this.answers.forEach(answerLayer => {
@@ -341,16 +366,25 @@ class WitkinTestController {
           this.layers[answerLayer].forEach(obj => {
             totalElementsCount++;
             if (obj.selected) {
-              needCount++;
+              currentSelectedFromNeeded++;
             }
           });
         }
       });
-      if (needCount === haveCount && totalElementsCount === haveCount) {
+      const percent = (currentSelectedFromNeeded / totalElementsCount) * 100;
+      // if (currentSelectedFromNeeded === haveCount && totalElementsCount === haveCount) {
+      if (!isSpared && percent >= 65) {
         result = true;
+        this.percent = percent;
+        this.rightAnswer = selectedItems;
       }
-      console.log('answer', answer, 'needCount', needCount, 'totalElements', totalElementsCount);
+      console.log('answer', answer, 'currentSelectedFromNeeded', currentSelectedFromNeeded, 'totalElements', totalElementsCount);
+      console.log('percent', percent, 'isSpared', isSpared);
+      console.log('selectedItems', selectedItems);
       answer++;
+    }
+    if (!result) {
+      this.wrongAnswers.push(selectedItems);
     }
     // this.answers.forEach(answerLayer => {
     //   let needCount = 0;
@@ -376,6 +410,13 @@ class WitkinTestController {
       });
     });
     this.info = '';
+// TODO: example of selected lines
+    // const answer = [7, 8, 25, 73, 44, 45, 81];
+    // this.canvas.getObjects().forEach(obj => {
+    //   if (answer.includes(obj.label)) {
+    //     obj.setFill('green');
+    //   }
+    // });
     this.refresh();
   }
   getCurrentTime() {

@@ -20,6 +20,7 @@
     <h2 class="text-center">Доступні операції:</h2>
     <div class="row">
       <div  class="text-center">
+        <h3>Нова таблиця</h3>
         <h4>Зберегти:</h4>
       </div>
       <div class="col-sm-6 col-sm-offset-4">
@@ -33,5 +34,22 @@
       <p>Ви також маєте змогу видалити всі отримані на даний момент результати тестів, але перед цим треба їх зберегти</p>
       <button class="btn btn-red" ng-click="$ctrl.clearResults()" ng-disabled="$ctrl.checkIfAllSaved()">Видалити всі результати</button>
     </div>
+    <br><br>
+    <div class="row">
+      <div  class="text-center">
+        <h3>Стара таблиця</h3>
+        <h4>Зберегти:</h4>
+      </div>
+      <div class="col-sm-6 col-sm-offset-4">
+        <button type="submit" class="btn btn-green" ng-click="$ctrl.saveCirclesResults()">Кола та опитування</button>
+        <button type="submit" class="btn btn-green" ng-click="$ctrl.saveWitkinResults()">Тест Віткина</button>
+      </div>
+    </div>
+    <br>
+    <br>
+    <!--<div class="row text-center">-->
+      <!--<p>Ви також маєте змогу видалити всі отримані на даний момент результати тестів, але перед цим треба їх зберегти</p>-->
+      <!--<button class="btn btn-red" ng-click="$ctrl.clearResults()" ng-disabled="$ctrl.checkIfAllSaved()">Видалити всі результати</button>-->
+    <!--</div>-->
   </div>
 </div>

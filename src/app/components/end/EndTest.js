@@ -2,6 +2,7 @@ class EndTestController {
   constructor(userService, $window) {
     this.userService = userService;
     this.$window = $window;
+    this.userService.clear();
     // this.connectToServer();
   }
   connectToServer() {
