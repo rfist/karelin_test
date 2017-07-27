@@ -5,6 +5,9 @@ class CirclesTestController {
     this.$window = $window;
     this.selected = 0;
     this.checkState();
+    // TODO: REMOVE
+    this.userService.setCircle(this.selected);
+    this.$state.go('assertions');
   }
   select(number) {
     this.selected = number;
