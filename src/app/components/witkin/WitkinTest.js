@@ -12,8 +12,8 @@ class WitkinTestController {
     this.$state = $state;
     this.$window = $window;
     this.userService = userService;
-    this.SHOW_TEST_TIME = 15000;
-    this.SHOW_REQUIRED_TIME = 10000;
+    this.SHOW_TEST_TIME = 1000;
+    this.SHOW_REQUIRED_TIME = 1000;
     this.startTime = 0;
     this.selectedTime = 0;
     this.isTestStarted = false;
@@ -32,7 +32,7 @@ class WitkinTestController {
     if (this.userService.user.unregistered) {
       this.$state.go('app');
     }
-    if (this.id < userService.lastWitkinTest) {
+    if (this.id < -1) {
       this.$state.go('witkin-start', {id: userService.lastWitkinTest});
     } else {
       userService.lastWitkinTest = this.id;
@@ -62,6 +62,10 @@ class WitkinTestController {
     const multipleAnswers = [];
     const coordsX = [];
     const coordsY = [];
+    this.circles = [];
+    this.circlesObjects = [];
+    this.drawedLines = [];
+    this.isDrawing = false;
     let count = 0;
     this.canvas.getObjects().forEach(obj => {
       // console.log('obj.id', obj.id);
@@ -69,6 +73,7 @@ class WitkinTestController {
       count++;
       this.addToLayer(obj);
       if (obj.id === 'lines' || obj.id.includes('answer') || obj.id.includes('multiple')) {
+        this.addCirclesToLine(obj);
         obj.on('mousemove', this.onMouseMove.bind(this));
         obj.on('mouseout', () => {
           this.onMouseOut(obj);
@@ -113,6 +118,8 @@ class WitkinTestController {
     console.log('init complete');
     this.$timeout(this.showRequired.bind(this), 1000);
     this.zoomIt(this.minSize / this.realSize);
+    this.canvas.on('mouse:move', this.onCanvasMove.bind(this));
+    this.canvas.on('mouse:down', this.onCanvasDown.bind(this));
   }
   zoomIt(factor) {
     // this.canvas.setHeight(this.canvas.getHeight() * factor);
@@ -146,6 +153,156 @@ class WitkinTestController {
     }
     this.canvas.renderAll();
     this.canvas.calcOffset();
+  }
+  addCirclesToLine(line) {
+    const longSide = line.width > line.height ? line.width : line.height;
+    const circle = new fabric.Circle({
+      left: line.left,
+      top: line.top,
+      radius: 3,
+      strokeWidth: 1,
+      fill: 'green',
+      stroke: 'white',
+      selectable: false,
+      originX: 'center', originY: 'center'
+    });
+    // eslint-disable-next-line
+    Number.prototype.toRad = function () { return this * Math.PI / 180; }
+    const R = Math.abs(line.left + (longSide * line.scaleX) - line.left);
+    let x1;
+    let y1;
+    if (line.width > line.height) {
+      y1 = line.top + (R * Math.sin(line.angle.toRad()));
+      x1 = line.left + (R * Math.cos(line.angle.toRad()));
+    } else {
+      y1 = line.top + (R * Math.sin((line.angle + 90).toRad()));
+      x1 = line.left + (R * Math.cos((line.angle + 90).toRad()));
+    }
+    const circle2 = new fabric.Circle({
+      left: x1,
+      top: y1,
+      radius: 3,
+      strokeWidth: 1,
+      fill: 'green',
+      stroke: 'white',
+      selectable: false,
+      originX: 'center', originY: 'center'
+    });
+    if (this.addToCircleMatrix(circle.left, circle.top)) {
+      this.canvas.add(circle);
+      this.circlesObjects.push(circle);
+      circle.on('mousemove', this.onMouseCircleMove.bind(this));
+      circle.on('mouseout', () => {
+        this.onMouseCircleOut(circle);
+        this.refresh();
+      });
+      circle.on('mousedown', this.onMouseCircleDown.bind(this));
+    }
+    if (this.addToCircleMatrix(circle2.left, circle2.top)) {
+      this.canvas.add(circle2);
+      this.circlesObjects.push(circle2);
+      circle2.on('mousemove', this.onMouseCircleMove.bind(this));
+      circle2.on('mouseout', () => {
+        this.onMouseCircleOut(circle2);
+        this.refresh();
+      });
+      circle2.on('mousedown', this.onMouseCircleDown.bind(this));
+    }
+  }
+  addToCircleMatrix(x, y) {
+    let isUniquePosition = true;
+    this.circles.forEach(circle => {
+      if (Math.abs(circle.x - x) < 5 && Math.abs(circle.y - y) < 5) {
+        isUniquePosition = false;
+      }
+    });
+    if (isUniquePosition) {
+      this.circles.push({x, y});
+    }
+    return isUniquePosition;
+  }
+  onCanvasDown() {
+    const date = new Date();
+    const now = date.getTime();
+    if (now - this.lastTime < 500) {
+      this.isDrawing = false;
+      this.line.remove();
+    }
+    this.lastTime = now;
+  }
+  onCanvasMove(o) {
+    if (!this.isDrawing) {
+      return;
+    }
+    const pointer = this.canvas.getPointer(o.e);
+    this.line.set({x2: pointer.x, y2: pointer.y});
+    this.refresh();
+  }
+  onMouseCircleMove(e) {
+    if (this.isTestStarted && e.target.fill !== this.HIGHLIGHT_COLOR) {
+      if (e.target.selected) {
+        e.target.setFill('yellow');
+      } else {
+        e.target.setFill('blue');
+      }
+      this.refresh();
+    }
+  }
+  onMouseCircleOut(obj) {
+    if (this.isTestStarted) {
+      console.log('onMouseCircleOut', obj);
+      if (obj.selected && obj.fill !== 'yellow') {
+        obj.setFill('yellow');
+        this.refresh();
+      } else if (!obj.selected && obj.fill !== 'green') {
+        obj.setFill('green');
+        this.refresh();
+      }
+    }
+  }
+  onMouseCircleDown(e) {
+    if (this.isTestStarted) {
+      if (this.timeBeforeFirstClick === 0) {
+        this.timeBeforeFirstClick = this.getCurrentTime() - this.timeButtonFindWasClicked;
+      }
+      // e.target.selected = !e.target.selected;
+      // if (e.target.selected) {
+      //   e.target.setFill('yellow');
+      if (this.isDrawing) {
+        this.line.selectable = true;
+        this.line.hasControls = true;
+        this.drawedLines.push(this.line);
+        const lineObj = new fabric.Line([120, 182, 820, 182], {
+          stroke: 'red',
+          strokeWidth: 8
+        });
+        this.canvas.add(lineObj);
+        this.circlesObjects.forEach(circle => {
+          if (lineObj.intersectsWithObject(circle)) {
+            circle.setFill('red');
+          }
+          console.log('intersectsWithObject', lineObj.intersectsWithObject(circle));
+        });
+        lineObj.remove();
+      }
+      this.isDrawing = true;
+      const pointer = this.canvas.getPointer(e.e);
+      const points = [pointer.x, pointer.y, pointer.x, pointer.y];
+      this.line = new fabric.Line(points, {
+        strokeWidth: 5,
+        fill: 'red',
+        stroke: 'red',
+        originX: 'center',
+        originY: 'center',
+        padding: 30
+      });
+      this.line.on('mousedown', this.onMouseDown.bind(this));
+      this.canvas.add(this.line);
+      // } else {
+      //   e.target.setFill('green');
+      // }
+      this.refresh();
+    }
   }
   showRequired() {
     this.SHOW_TEST_TIME -= 1000;
@@ -271,6 +428,7 @@ class WitkinTestController {
     }
   }
   onMouseDown(e) {
+    e.target.remove();
     if (this.isTestStarted) {
       if (this.timeBeforeFirstClick === 0) {
         this.timeBeforeFirstClick = this.getCurrentTime() - this.timeButtonFindWasClicked;
@@ -307,15 +465,14 @@ class WitkinTestController {
   }
   continueTest() {
     if (this.id < this.TESTS_COUNT) {
-      const nextTest = this.id + 1;
-      this.userService.lastWitkinTest = nextTest;
+      this.userService.lastWitkinTest = this.id + 1;
       this.userService.save();
-      this.$state.go('witkin-start', {id: nextTest});
+      this.saveResults(false);
     } else {
       this.saveResults();
     }
   }
-  saveResults() {
+  saveResults(exitAfter = true) {
     if (this.$window.XMLHttpRequest) { // Mozilla, Safari, ...
       this.xhr = new XMLHttpRequest();
     } else if (this.$window.ActiveXObject) { // IE 8 and older
@@ -334,8 +491,11 @@ class WitkinTestController {
       };
     });
     prom.then(() => {
-      console.log('witkin test finished');
-      this.$state.go('end');
+      if (exitAfter) {
+        this.$state.go('end');
+      } else {
+        this.$state.go('witkin-start', {id: this.userService.lastWitkinTest});
+      }
     });
   }
   checkSelectedFigure() {
