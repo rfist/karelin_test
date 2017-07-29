@@ -12,8 +12,8 @@ class WitkinTestController {
     this.$state = $state;
     this.$window = $window;
     this.userService = userService;
-    this.SHOW_TEST_TIME = 1000;
-    this.SHOW_REQUIRED_TIME = 1000;
+    this.SHOW_TEST_TIME = 15000;
+    this.SHOW_REQUIRED_TIME = 10000;
     this.startTime = 0;
     this.selectedTime = 0;
     this.isTestStarted = false;
@@ -53,6 +53,7 @@ class WitkinTestController {
         this.canvas.loadFromJSON(loadObj, () => {
           this.refresh();
           console.log('load');
+          $window.onkeydown = this.checkKey.bind(this);
           this.init();
         });
       });
@@ -72,14 +73,8 @@ class WitkinTestController {
       obj.label = count;
       count++;
       this.addToLayer(obj);
-      if (obj.id === 'lines' || obj.id.includes('answer') || obj.id.includes('multiple')) {
+      if (obj.id === 'lines' || obj.id.includes('answer')) {
         this.addCirclesToLine(obj);
-        obj.on('mousemove', this.onMouseMove.bind(this));
-        obj.on('mouseout', () => {
-          this.onMouseOut(obj);
-          this.refresh();
-        });
-        obj.on('mousedown', this.onMouseDown.bind(this));
         if (obj.id.includes('answer') && this.answers.indexOf(obj.id) === -1) {
           this.answers.push(obj.id);
           const number = obj.id.substr(7);
@@ -120,6 +115,14 @@ class WitkinTestController {
     this.zoomIt(this.minSize / this.realSize);
     this.canvas.on('mouse:move', this.onCanvasMove.bind(this));
     this.canvas.on('mouse:down', this.onCanvasDown.bind(this));
+  }
+  checkKey(e) {
+    console.log('e', e.keyCode);
+    const activeObject = this.canvas.getActiveObject();
+    if (activeObject && activeObject.id === 'draw' && e.keyCode === 46) {
+      this.drawedLines.splice(this.drawedLines.indexOf(activeObject), 1);
+      activeObject.remove();
+    }
   }
   zoomIt(factor) {
     // this.canvas.setHeight(this.canvas.getHeight() * factor);
@@ -178,6 +181,9 @@ class WitkinTestController {
       y1 = line.top + (R * Math.sin((line.angle + 90).toRad()));
       x1 = line.left + (R * Math.cos((line.angle + 90).toRad()));
     }
+    circle.id = 'circles';
+    this.canvas.add(circle);
+    this.circlesObjects.push(circle);
     const circle2 = new fabric.Circle({
       left: x1,
       top: y1,
@@ -188,31 +194,40 @@ class WitkinTestController {
       selectable: false,
       originX: 'center', originY: 'center'
     });
+    this.circlesObjects.push(circle2);
+    this.canvas.add(circle2);
+    circle2.id = 'circles';
     if (this.addToCircleMatrix(circle.left, circle.top)) {
-      this.canvas.add(circle);
-      this.circlesObjects.push(circle);
       circle.on('mousemove', this.onMouseCircleMove.bind(this));
       circle.on('mouseout', () => {
         this.onMouseCircleOut(circle);
         this.refresh();
       });
       circle.on('mousedown', this.onMouseCircleDown.bind(this));
+      this.addToLayer(circle);
+    } else {
+      circle.visible = false;
     }
     if (this.addToCircleMatrix(circle2.left, circle2.top)) {
-      this.canvas.add(circle2);
-      this.circlesObjects.push(circle2);
       circle2.on('mousemove', this.onMouseCircleMove.bind(this));
       circle2.on('mouseout', () => {
         this.onMouseCircleOut(circle2);
         this.refresh();
       });
       circle2.on('mousedown', this.onMouseCircleDown.bind(this));
+      this.addToLayer(circle2);
+    } else {
+      circle2.visible = false;
+    }
+    if (circle.top !== circle2.top || circle.left !== circle2.left) {
+      line.circles = [circle, circle2];
     }
   }
   addToCircleMatrix(x, y) {
     let isUniquePosition = true;
     this.circles.forEach(circle => {
-      if (Math.abs(circle.x - x) < 5 && Math.abs(circle.y - y) < 5) {
+      // if (Math.abs(circle.x - x) < 10 && Math.abs(circle.y - y) < 10) {
+      if (this.getDistanceBetweenTwoPoints(circle.x, circle.y, x, y) < 10) {
         isUniquePosition = false;
       }
     });
@@ -240,11 +255,7 @@ class WitkinTestController {
   }
   onMouseCircleMove(e) {
     if (this.isTestStarted && e.target.fill !== this.HIGHLIGHT_COLOR) {
-      if (e.target.selected) {
-        e.target.setFill('yellow');
-      } else {
-        e.target.setFill('blue');
-      }
+      e.target.setFill('yellow');
       this.refresh();
     }
   }
@@ -265,44 +276,62 @@ class WitkinTestController {
       if (this.timeBeforeFirstClick === 0) {
         this.timeBeforeFirstClick = this.getCurrentTime() - this.timeButtonFindWasClicked;
       }
-      // e.target.selected = !e.target.selected;
-      // if (e.target.selected) {
-      //   e.target.setFill('yellow');
       if (this.isDrawing) {
-        this.line.selectable = true;
-        this.line.hasControls = true;
-        this.drawedLines.push(this.line);
-        const lineObj = new fabric.Line([120, 182, 820, 182], {
-          stroke: 'red',
-          strokeWidth: 8
+        this.line.endX = e.target.left;
+        this.line.endY = e.target.top;
+        const rect = new fabric.Rect({
+          width: this.getDistanceBetweenTwoPoints(this.line.startX, this.line.startY, this.line.endX, this.line.endY), height: 5, left: this.line.startX, top: this.line.startY, angle: this.getAngleBetweenTwoPoints(this.line.startX, this.line.startY, this.line.endX, this.line.endY),
+          fill: this.SELECT_COLOR,
+          stroke: 'black',
+          lockMovementX: true,
+          lockMovementY: true,
+          lockRotation: true,
+          id: 'draw'
         });
-        this.canvas.add(lineObj);
-        this.circlesObjects.forEach(circle => {
-          if (lineObj.intersectsWithObject(circle)) {
-            circle.setFill('red');
-          }
-          console.log('intersectsWithObject', lineObj.intersectsWithObject(circle));
-        });
-        lineObj.remove();
+        this.canvas.add(rect);
+        this.drawedLines.push(rect);
+        e.target.bringToFront();
+        this.line.startCircle.bringToFront();
+        this.line.remove();
       }
       this.isDrawing = true;
       const pointer = this.canvas.getPointer(e.e);
       const points = [pointer.x, pointer.y, pointer.x, pointer.y];
       this.line = new fabric.Line(points, {
         strokeWidth: 5,
-        fill: 'red',
-        stroke: 'red',
+        fill: this.HIGHLIGHT_COLOR,
+        stroke: this.HIGHLIGHT_COLOR,
         originX: 'center',
         originY: 'center',
         padding: 30
       });
-      this.line.on('mousedown', this.onMouseDown.bind(this));
+      this.line.startCircle = e.target;
+      this.line.startX = pointer.x;
+      this.line.startY = pointer.y;
       this.canvas.add(this.line);
-      // } else {
-      //   e.target.setFill('green');
-      // }
       this.refresh();
     }
+  }
+  getDistanceBetweenTwoPoints(x1, y1, x2, y2) {
+    return Math.sqrt(Math.abs(Math.pow(x1 - x2, 2)) + Math.abs(Math.pow(y1 - y2, 2)));
+  }
+  getAngleBetweenTwoPoints(x1, y1, x2, y2) {
+    const p1 = {
+      x: x1,
+      y: y1
+    };
+
+    const p2 = {
+      x: x2,
+      y: y2
+    };
+
+// angle in radians
+//     const angleRadians = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+// angle in degrees
+    const angleDeg = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+    return angleDeg;
   }
   showRequired() {
     this.SHOW_TEST_TIME -= 1000;
@@ -377,6 +406,8 @@ class WitkinTestController {
     this.isTestStarted = true;
     this.timeBeforeFirstClick = 0;
     this.timeButtonFindWasClicked = this.getCurrentTime();
+    this.showLayers(['background', 'lines', 'circles'].concat(this.answers));
+    this.refresh();
   }
   addToLayer(obj) {
     const id = obj.id;
@@ -404,44 +435,6 @@ class WitkinTestController {
       }
     }
   }
-  onMouseMove(e) {
-    if (this.isTestStarted && e.target.fill !== this.HIGHLIGHT_COLOR) {
-      if (e.target.selected) {
-        e.target.setFill(this.HIGHLIGHT_COLOR);
-      } else {
-        e.target.setFill(this.HIGHLIGHT_COLOR);
-      }
-      this.refresh();
-    }
-  }
-  onMouseOut(obj) {
-    if (this.isTestStarted) {
-      if (obj.selected && obj.fill !== this.SELECT_COLOR) {
-        obj.setFill(this.SELECT_COLOR);
-        obj.setStroke('black');
-        this.refresh();
-      } else if (obj.fill !== 'black') {
-        obj.setFill('black');
-        obj.setStroke('');
-        this.refresh();
-      }
-    }
-  }
-  onMouseDown(e) {
-    e.target.remove();
-    if (this.isTestStarted) {
-      if (this.timeBeforeFirstClick === 0) {
-        this.timeBeforeFirstClick = this.getCurrentTime() - this.timeButtonFindWasClicked;
-      }
-      e.target.selected = !e.target.selected;
-      if (e.target.selected) {
-        e.target.setFill(this.HIGHLIGHT_COLOR);
-      } else {
-        e.target.setFill();
-      }
-      this.refresh();
-    }
-  }
   refresh() {
     this.canvas.renderAll();
   }
@@ -454,6 +447,7 @@ class WitkinTestController {
       // console.log(`Час на розшук ${this.passedTime} час на виділення ${this.selectedTime}`);
       this.continueTest();
     } else {
+      this.showLayers(['background', 'lines'].concat(this.answers));
       this.reset();
       this.startTime = this.getCurrentTime() - this.passedTime;
       this.isTestStarted = false;
@@ -499,6 +493,21 @@ class WitkinTestController {
     });
   }
   checkSelectedFigure() {
+    this.drawedLines.forEach(rect => {
+      this.circlesObjects.forEach(circle => {
+        circle.visible = true;
+        if (rect.intersectsWithObject(circle)) {
+          circle.marked = true;
+        }
+      });
+      this.canvas.getObjects().forEach(obj => {
+        if (obj.circles && obj.circles[0].marked && obj.circles[1].marked) {
+          if (rect.intersectsWithObject(obj.circles[0]) && rect.intersectsWithObject(obj.circles[1])) {
+            obj.selected = true;
+          }
+        }
+      });
+    });
     let haveCount = 0;
     let result = false;
     let isSpared = false;
@@ -513,6 +522,7 @@ class WitkinTestController {
       }
     });
     if (haveCount === 0) {
+      console.log('nothing selected');
       return false;
     }
     const MAX_ANSWERS = 10;
@@ -561,6 +571,11 @@ class WitkinTestController {
     return result;
   }
   reset() {
+    this.drawedLines.forEach(obj => obj.remove());
+    this.drawedLines = [];
+    this.circlesObjects.forEach(circle => {
+      circle.marked = false;
+    });
     const l = this.answers.concat(['lines']);
     l.forEach(layer => {
       this.layers[layer].forEach(obj => {
