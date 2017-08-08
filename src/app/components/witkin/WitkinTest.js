@@ -30,6 +30,7 @@ class WitkinTestController {
     this.isTestPassed = false;
     this.id = parseInt($stateParams.id, 10);
     this.userService.load();
+    this.isMouseDown = false;
     this.$scope = $scope;
     console.log('lastWitkinTest', userService.lastWitkinTest);
     if (this.userService.user.unregistered) {
@@ -56,7 +57,6 @@ class WitkinTestController {
         this.canvas.loadFromJSON(loadObj, () => {
           this.refresh();
           console.log('load');
-          $window.onkeydown = this.checkKey.bind(this);
           this.init();
         });
       });
@@ -76,8 +76,13 @@ class WitkinTestController {
       obj.label = count;
       count++;
       this.addToLayer(obj);
-      if (obj.id === 'lines' || obj.id.includes('answer')) {
-        this.addCirclesToLine(obj);
+      if (obj.id === 'lines' || obj.id.includes('answer') || obj.id.includes('multiple')) {
+        obj.on('mousemove', this.onMouseMove.bind(this));
+        obj.on('mouseout', () => {
+          this.onMouseOut(obj);
+          this.refresh();
+        });
+        obj.on('mousedown', this.onMouseDown.bind(this));
         if (obj.id.includes('answer') && this.answers.indexOf(obj.id) === -1) {
           this.answers.push(obj.id);
           const number = obj.id.substr(7);
@@ -116,16 +121,10 @@ class WitkinTestController {
     console.log('init complete');
     this.$timeout(this.showRequired.bind(this), 1000);
     this.zoomIt(this.minSize / this.realSize);
-    this.canvas.on('mouse:move', this.onCanvasMove.bind(this));
-    this.canvas.on('mouse:down', this.onCanvasDown.bind(this));
+    this.canvas.on('mouse:up', this.onMouseUp.bind(this));
   }
-  checkKey(e) {
-    console.log('e', e.keyCode);
-    const activeObject = this.canvas.getActiveObject();
-    if (activeObject && activeObject.id === 'draw' && e.keyCode === 46) {
-      this.drawedLines.splice(this.drawedLines.indexOf(activeObject), 1);
-      activeObject.remove();
-    }
+  onMouseUp() {
+    this.isMouseDown = false;
   }
   zoomIt(factor) {
     // this.canvas.setHeight(this.canvas.getHeight() * factor);
@@ -159,182 +158,6 @@ class WitkinTestController {
     }
     this.canvas.renderAll();
     this.canvas.calcOffset();
-  }
-  addCirclesToLine(line) {
-    const longSide = line.width > line.height ? line.width : line.height;
-    const circle = new fabric.Circle({
-      left: line.left,
-      top: line.top,
-      radius: 3,
-      strokeWidth: 1,
-      fill: 'green',
-      stroke: 'white',
-      selectable: false,
-      originX: 'center', originY: 'center'
-    });
-    // eslint-disable-next-line
-    Number.prototype.toRad = function () { return this * Math.PI / 180; }
-    const R = Math.abs(line.left + (longSide * line.scaleX) - line.left);
-    let x1;
-    let y1;
-    if (line.width > line.height) {
-      y1 = line.top + (R * Math.sin(line.angle.toRad()));
-      x1 = line.left + (R * Math.cos(line.angle.toRad()));
-    } else {
-      y1 = line.top + (R * Math.sin((line.angle + 90).toRad()));
-      x1 = line.left + (R * Math.cos((line.angle + 90).toRad()));
-    }
-    circle.id = 'circles';
-    this.canvas.add(circle);
-    this.circlesObjects.push(circle);
-    const circle2 = new fabric.Circle({
-      left: x1,
-      top: y1,
-      radius: 3,
-      strokeWidth: 1,
-      fill: 'green',
-      stroke: 'white',
-      selectable: false,
-      originX: 'center', originY: 'center'
-    });
-    this.circlesObjects.push(circle2);
-    this.canvas.add(circle2);
-    circle2.id = 'circles';
-    if (this.addToCircleMatrix(circle.left, circle.top)) {
-      circle.on('mousemove', this.onMouseCircleMove.bind(this));
-      circle.on('mouseout', () => {
-        this.onMouseCircleOut(circle);
-        this.refresh();
-      });
-      circle.on('mousedown', this.onMouseCircleDown.bind(this));
-      this.addToLayer(circle);
-    } else {
-      circle.visible = false;
-    }
-    if (this.addToCircleMatrix(circle2.left, circle2.top)) {
-      circle2.on('mousemove', this.onMouseCircleMove.bind(this));
-      circle2.on('mouseout', () => {
-        this.onMouseCircleOut(circle2);
-        this.refresh();
-      });
-      circle2.on('mousedown', this.onMouseCircleDown.bind(this));
-      this.addToLayer(circle2);
-    } else {
-      circle2.visible = false;
-    }
-    if (circle.top !== circle2.top || circle.left !== circle2.left) {
-      line.circles = [circle, circle2];
-    }
-  }
-  addToCircleMatrix(x, y) {
-    let isUniquePosition = true;
-    this.circles.forEach(circle => {
-      // if (Math.abs(circle.x - x) < 10 && Math.abs(circle.y - y) < 10) {
-      if (this.getDistanceBetweenTwoPoints(circle.x, circle.y, x, y) < 10) {
-        isUniquePosition = false;
-      }
-    });
-    if (isUniquePosition) {
-      this.circles.push({x, y});
-    }
-    return isUniquePosition;
-  }
-  onCanvasDown() {
-    const date = new Date();
-    const now = date.getTime();
-    if (now - this.lastTime < 500) {
-      this.isDrawing = false;
-      this.line.remove();
-    }
-    this.lastTime = now;
-  }
-  onCanvasMove(o) {
-    if (!this.isDrawing) {
-      return;
-    }
-    const pointer = this.canvas.getPointer(o.e);
-    this.line.set({x2: pointer.x, y2: pointer.y});
-    this.refresh();
-  }
-  onMouseCircleMove(e) {
-    if (this.isTestStarted && e.target.fill !== this.HIGHLIGHT_COLOR) {
-      e.target.setFill('yellow');
-      this.refresh();
-    }
-  }
-  onMouseCircleOut(obj) {
-    if (this.isTestStarted) {
-      console.log('onMouseCircleOut', obj);
-      if (obj.selected && obj.fill !== 'yellow') {
-        obj.setFill('yellow');
-        this.refresh();
-      } else if (!obj.selected && obj.fill !== 'green') {
-        obj.setFill('green');
-        this.refresh();
-      }
-    }
-  }
-  onMouseCircleDown(e) {
-    if (this.isTestStarted) {
-      if (this.timeBeforeFirstClick === 0) {
-        this.timeBeforeFirstClick = this.getCurrentTime() - this.timeButtonFindWasClicked;
-      }
-      if (this.isDrawing) {
-        this.line.endX = e.target.left;
-        this.line.endY = e.target.top;
-        const rect = new fabric.Rect({
-          width: this.getDistanceBetweenTwoPoints(this.line.startX, this.line.startY, this.line.endX, this.line.endY), height: 5, left: this.line.startX, top: this.line.startY, angle: this.getAngleBetweenTwoPoints(this.line.startX, this.line.startY, this.line.endX, this.line.endY),
-          fill: this.SELECT_COLOR,
-          stroke: 'black',
-          lockMovementX: true,
-          lockMovementY: true,
-          lockRotation: true,
-          id: 'draw'
-        });
-        this.canvas.add(rect);
-        this.drawedLines.push(rect);
-        e.target.bringToFront();
-        this.line.startCircle.bringToFront();
-        this.line.remove();
-      }
-      this.isDrawing = true;
-      const pointer = this.canvas.getPointer(e.e);
-      const points = [pointer.x, pointer.y, pointer.x, pointer.y];
-      this.line = new fabric.Line(points, {
-        strokeWidth: 5,
-        fill: this.HIGHLIGHT_COLOR,
-        stroke: this.HIGHLIGHT_COLOR,
-        originX: 'center',
-        originY: 'center',
-        padding: 30
-      });
-      this.line.startCircle = e.target;
-      this.line.startX = pointer.x;
-      this.line.startY = pointer.y;
-      this.canvas.add(this.line);
-      this.refresh();
-    }
-  }
-  getDistanceBetweenTwoPoints(x1, y1, x2, y2) {
-    return Math.sqrt(Math.abs(Math.pow(x1 - x2, 2)) + Math.abs(Math.pow(y1 - y2, 2)));
-  }
-  getAngleBetweenTwoPoints(x1, y1, x2, y2) {
-    const p1 = {
-      x: x1,
-      y: y1
-    };
-
-    const p2 = {
-      x: x2,
-      y: y2
-    };
-
-// angle in radians
-//     const angleRadians = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-
-// angle in degrees
-    const angleDeg = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
-    return angleDeg;
   }
   showRequired() {
     this.SHOW_TEST_TIME -= 1000;
@@ -438,6 +261,61 @@ class WitkinTestController {
       }
     }
   }
+  onMouseMove(e) {
+    if (this.isTestStarted && e.target && e.target.fill !== this.HIGHLIGHT_COLOR) {
+      if (this.isMouseDown && !e.target.selected) {
+        const pointer = this.canvas.getPointer(e.e);
+        const pointer2 = e.target.getCenterPoint();
+        const h = e.target.height / 3;
+        const w = e.target.width / 3;
+        const xx = Math.abs(pointer.x - pointer2.x);
+        const yy = Math.abs(pointer.y - pointer2.y);
+        const max = Math.max(h, w);
+        if (xx < max && yy < max) {
+          e.target.overCount = 0;
+          e.target.selected = true;
+          e.target.setFill(this.HIGHLIGHT_COLOR);
+          this.refresh();
+        }
+      } else {
+        if (e.target.selected) {
+          e.target.setFill(this.HIGHLIGHT_COLOR);
+        } else {
+          e.target.setFill(this.HIGHLIGHT_COLOR);
+        }
+        this.refresh();
+      }
+    }
+  }
+  onMouseOut(obj) {
+    if (this.isTestStarted) {
+      if (obj.selected && obj.fill !== this.SELECT_COLOR) {
+        obj.setFill(this.SELECT_COLOR);
+        obj.setStroke('black');
+        this.refresh();
+      } else if (obj.fill !== 'black') {
+        obj.setFill('black');
+        obj.setStroke('');
+        this.refresh();
+      }
+    }
+  }
+  onMouseDown(e) {
+    this.isMouseDown = true;
+    if (this.isTestStarted) {
+      if (this.timeBeforeFirstClick === 0) {
+        this.timeBeforeFirstClick = this.getCurrentTime() - this.timeButtonFindWasClicked;
+      }
+      e.target.selected = !e.target.selected;
+      if (e.target.selected) {
+        e.target.setFill(this.HIGHLIGHT_COLOR);
+      } else {
+        e.target.setFill('black');
+        e.target.setStroke('');
+      }
+      this.refresh();
+    }
+  }
   refresh() {
     this.canvas.renderAll();
   }
@@ -502,21 +380,6 @@ class WitkinTestController {
     }
   }
   checkSelectedFigure() {
-    this.drawedLines.forEach(rect => {
-      this.circlesObjects.forEach(circle => {
-        circle.visible = true;
-        if (rect.intersectsWithObject(circle)) {
-          circle.marked = true;
-        }
-      });
-      this.canvas.getObjects().forEach(obj => {
-        if (obj.circles && obj.circles[0].marked && obj.circles[1].marked) {
-          if (rect.intersectsWithObject(obj.circles[0]) && rect.intersectsWithObject(obj.circles[1])) {
-            obj.selected = true;
-          }
-        }
-      });
-    });
     let haveCount = 0;
     let result = false;
     let isSpared = false;
@@ -580,11 +443,6 @@ class WitkinTestController {
     return result;
   }
   reset() {
-    this.drawedLines.forEach(obj => obj.remove());
-    this.drawedLines = [];
-    this.circlesObjects.forEach(circle => {
-      circle.marked = false;
-    });
     const l = this.answers.concat(['lines']);
     l.forEach(layer => {
       this.layers[layer].forEach(obj => {

@@ -259,6 +259,10 @@ class EditorController {
       obj.originTop = obj.top;
       obj.originLeft = obj.left;
       switch (parseInt(this.testNumber, 10)) {
+        case 0:
+          obj.top -= 430;
+          obj.left -= 150;
+          break;
         case 1:
           obj.top -= 475;
           obj.left -= 170;
