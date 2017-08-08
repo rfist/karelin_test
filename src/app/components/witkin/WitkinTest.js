@@ -1,5 +1,5 @@
 class WitkinTestController {
-  constructor($stateParams, $http, $timeout, $window, $state, userService) {
+  constructor($stateParams, $http, $timeout, $window, $state, userService, $scope) {
     this.TESTS_COUNT = 24;
     this.HIGHLIGHT_COLOR = 'grey';
     this.SELECT_COLOR = 'white';
@@ -26,8 +26,11 @@ class WitkinTestController {
     this.countOfUsedHint = 0;
     this.timeBeforeFirstClick = 0;
     this.percent = 0;
+    this.isTestFinished = false;
+    this.isTestPassed = false;
     this.id = parseInt($stateParams.id, 10);
     this.userService.load();
+    this.$scope = $scope;
     console.log('lastWitkinTest', userService.lastWitkinTest);
     if (this.userService.user.unregistered) {
       this.$state.go('app');
@@ -445,6 +448,7 @@ class WitkinTestController {
       this.userService.setWitkinTest(this.id, this.passedTime, this.selectedTime, this.countOfUsedHint, this.timeBeforeFirstClick);
       this.userService.setWitkinHistory(this.id, this.wrongAnswers, this.rightAnswer, this.percent);
       // console.log(`Час на розшук ${this.passedTime} час на виділення ${this.selectedTime}`);
+      this.isTestPassed = true;
       this.continueTest();
     } else {
       this.showLayers(['background', 'lines'].concat(this.answers));
@@ -461,12 +465,12 @@ class WitkinTestController {
     if (this.id < this.TESTS_COUNT) {
       this.userService.lastWitkinTest = this.id + 1;
       this.userService.save();
-      this.saveResults(false);
+      this.saveResults();
     } else {
       this.saveResults();
     }
   }
-  saveResults(exitAfter = true) {
+  saveResults() {
     if (this.$window.XMLHttpRequest) { // Mozilla, Safari, ...
       this.xhr = new XMLHttpRequest();
     } else if (this.$window.ActiveXObject) { // IE 8 and older
@@ -485,12 +489,17 @@ class WitkinTestController {
       };
     });
     prom.then(() => {
-      if (exitAfter) {
-        this.$state.go('end');
-      } else {
-        this.$state.go('witkin-start', {id: this.userService.lastWitkinTest});
-      }
+      console.log('saveResults');
+      this.isTestFinished = true;
+      this.$scope.$digest();
     });
+  }
+  next() {
+    if (this.id < this.TESTS_COUNT) {
+      this.$state.go('witkin-start', {id: this.userService.lastWitkinTest});
+    } else {
+      this.$state.go('end');
+    }
   }
   checkSelectedFigure() {
     this.drawedLines.forEach(rect => {
@@ -599,7 +608,7 @@ class WitkinTestController {
   }
 }
 
-WitkinTestController.$inject = ['$stateParams', '$http', '$timeout', '$window', '$state', 'userService'];
+WitkinTestController.$inject = ['$stateParams', '$http', '$timeout', '$window', '$state', 'userService', '$scope'];
 
 export const witkinTest = {
   template: require('./WitkinTest.html'),
