@@ -73,30 +73,6 @@ class EditorController {
     if (e.code === 'Space') {
       this.drawLine();
     }
-    if (e.code === 'KeyQ') {
-      this.canvas.getObjects().forEach(obj => {
-        obj.selectable = false;
-      });
-      this.refresh();
-      console.log('all locked');
-    }
-    if (e.code === 'KeyR') {
-      // this.addRectangle();
-      if (this.activeGroup) {
-        const activeObject = this.canvas.getActiveObject();
-        console.log('active object', activeObject);
-        if (activeObject.type === 'group') {
-          const items = activeObject._objects;
-          activeObject._restoreObjectsState();
-          this.canvas.remove(activeObject);
-          for (let i = 0; i < items.length; i++) {
-            this.canvas.add(items[i]);
-            // this.canvas.item(this.canvas.size()-1).hasControls = true;
-          }
-          this.canvas.renderAll();
-        }
-      }
-    }
   }
   selectObject(isPrev) {
     if (this.activeObject) {

@@ -1,13 +1,12 @@
 class WitkinTestController {
-  constructor($stateParams, $http, $timeout, $window, $state, userService, $scope) {
+  constructor($http, $timeout, $window, $state, userService, $scope) {
     this.TESTS_COUNT = 24;
     this.HIGHLIGHT_COLOR = 'grey';
     this.SELECT_COLOR = 'white';
     this.info = '';
     this.layers = {};
     this.answers = [];
-    this.wrongAnswers = [];
-    this.rightAnswer = [];
+    this.history = [];
     this.$timeout = $timeout;
     this.$state = $state;
     this.$window = $window;
@@ -15,7 +14,6 @@ class WitkinTestController {
     this.SHOW_TEST_TIME = 15000;
     this.SHOW_REQUIRED_TIME = 10000;
     this.startTime = 0;
-    this.selectedTime = 0;
     this.isTestStarted = false;
     this.isTimerStarted = false;
     this.TEXT_STEP_1 = 'Складна фігура';
@@ -25,18 +23,17 @@ class WitkinTestController {
     this.canvas = new fabric.Canvas('c');
     this.countOfUsedHint = 0;
     this.timeBeforeFirstClick = 0;
-    this.percent = 0;
     this.isTestFinished = false;
     this.isTestPassed = false;
-    this.id = parseInt($stateParams.id, 10);
+    this.id = parseInt($state.params.id, 10);
     this.userService.load();
     this.isMouseDown = false;
     this.$scope = $scope;
-    console.log('lastWitkinTest', userService.lastWitkinTest);
+    console.log('lastWitkinTest', userService.lastWitkinTest, $state);
     if (this.userService.user.unregistered) {
       this.$state.go('app');
     }
-    if (this.id < -1) {
+    if (this.id < userService.lastWitkinTest) {
       this.$state.go('witkin-start', {id: userService.lastWitkinTest});
     } else {
       userService.lastWitkinTest = this.id;
@@ -46,7 +43,7 @@ class WitkinTestController {
         const minSize = Math.min($window.innerHeight, $window.innerWidth);
         this.minSize = minSize;
         console.log('minSize', minSize);
-        $('#c').css({
+        angular.element('#c').css({
           height: minSize,
           width: minSize,
           top: 60
@@ -220,8 +217,6 @@ class WitkinTestController {
       } else {
         console.log('Time expired', currentTime, this.MAX_SEARCH_TIME);
         toastr.warning(`Час вичерпано!`);
-        this.userService.setWitkinTest(this.id, this.MAX_SEARCH_TIME, this.selectedTime, this.countOfUsedHint, this.timeBeforeFirstClick);
-        this.userService.setWitkinHistory(this.id, this.wrongAnswers, this.rightAnswer, 0);
         this.continueTest();
       }
     }
@@ -320,12 +315,12 @@ class WitkinTestController {
     this.canvas.renderAll();
   }
   check() {
-    if (this.checkSelectedFigure()) {
-      this.selectedTime = this.getCurrentTime() - (this.startTime + this.passedTime);
+    const result = this.checkSelectedFigure();
+    if (result) {
+      this.history.push(result);
+    }
+    if (result && result.isCorrect) {
       toastr.success('Відповідь вірна!');
-      this.userService.setWitkinTest(this.id, this.passedTime, this.selectedTime, this.countOfUsedHint, this.timeBeforeFirstClick);
-      this.userService.setWitkinHistory(this.id, this.wrongAnswers, this.rightAnswer, this.percent);
-      // console.log(`Час на розшук ${this.passedTime} час на виділення ${this.selectedTime}`);
       this.isTestPassed = true;
       this.continueTest();
     } else {
@@ -340,6 +335,7 @@ class WitkinTestController {
     }
   }
   continueTest() {
+    this.userService.setWitkinHistory(this.id, this.history);
     if (this.id < this.TESTS_COUNT) {
       this.userService.lastWitkinTest = this.id + 1;
       this.userService.save();
@@ -381,21 +377,22 @@ class WitkinTestController {
   }
   checkSelectedFigure() {
     let haveCount = 0;
-    let result = false;
-    let isSpared = false;
+    let isCorrect = false;
+    let sparesCount = 0;
+    let correctPercents = 0;
     const selectedItems = [];
     this.canvas.getObjects().forEach(obj => {
       if (obj.selected) {
         haveCount++;
         selectedItems.push(obj.label);
         if (obj.id.indexOf('answer') === -1) {
-          isSpared = true;
+          sparesCount++;
         }
       }
     });
     if (haveCount === 0) {
       console.log('nothing selected');
-      return false;
+      return null;
     }
     const MAX_ANSWERS = 10;
     let answer = 0;
@@ -413,34 +410,21 @@ class WitkinTestController {
           });
         }
       });
-      const percent = (currentSelectedFromNeeded / totalElementsCount) * 100;
-      // if (currentSelectedFromNeeded === haveCount && totalElementsCount === haveCount) {
-      if (!isSpared && percent >= 65) {
-        result = true;
-        this.percent = percent;
-        this.rightAnswer = selectedItems;
+      if (totalElementsCount > 0) {
+        const percent = (currentSelectedFromNeeded / totalElementsCount) * 100;
+        if (sparesCount <= 3 && percent >= 58) {
+          isCorrect = true;
+          correctPercents = percent;
+        }
       }
-      console.log('answer', answer, 'currentSelectedFromNeeded', currentSelectedFromNeeded, 'totalElements', totalElementsCount);
-      console.log('percent', percent, 'isSpared', isSpared);
-      console.log('selectedItems', selectedItems);
       answer++;
     }
-    if (!result) {
-      this.wrongAnswers.push(selectedItems);
-    }
-    // this.answers.forEach(answerLayer => {
-    //   let needCount = 0;
-    //   this.layers[answerLayer].forEach(obj => {
-    //     if (obj.selected) {
-    //       needCount++;
-    //     }
-    //   });
-    //   console.log('result', haveCount, needCount, this.layers[answerLayer].length);
-    //   if (needCount === haveCount && this.layers[answerLayer].length === haveCount) {
-    //     result = true;
-    //   }
-    // });
-    return result;
+    const resultObj = {selectedItems, isCorrect, sparesCount, correctPercents};
+    resultObj.passedTime = this.passedTime;
+    resultObj.selectedTime = this.getCurrentTime() - (this.startTime + this.passedTime);
+    resultObj.countOfUsedHint = this.countOfUsedHint;
+    resultObj.timeBeforeFirstClick = this.countOfUsedHint;
+    return resultObj;
   }
   reset() {
     const l = this.answers.concat(['lines']);
@@ -452,13 +436,6 @@ class WitkinTestController {
       });
     });
     this.info = '';
-// TODO: example of selected lines
-    // const answer = [7, 8, 25, 73, 44, 45, 81];
-    // this.canvas.getObjects().forEach(obj => {
-    //   if (answer.includes(obj.label)) {
-    //     obj.setFill('green');
-    //   }
-    // });
     this.refresh();
   }
   getCurrentTime() {
@@ -466,7 +443,7 @@ class WitkinTestController {
   }
 }
 
-WitkinTestController.$inject = ['$stateParams', '$http', '$timeout', '$window', '$state', 'userService', '$scope'];
+WitkinTestController.$inject = ['$http', '$timeout', '$window', '$state', 'userService', '$scope'];
 
 export const witkinTest = {
   template: require('./WitkinTest.html'),
