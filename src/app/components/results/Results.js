@@ -1,12 +1,72 @@
 class ResultsController {
-  constructor($state, userService, $window, $scope) {
+  constructor($state, $window, $scope, $http) {
     this.isDataReady = false;
-    this.isAuthorized = true;
+    this.isAuthorized = false;
     this.$window = $window;
     this.$scope = $scope;
     this.isCirclesSaved = false;
     this.isWitkinSaved = false;
+    this.users = [];
+    this.currentUser = {};
+    this.currentUserId = 0;
+    this.currentItem = {};
+    this.currentItemId = 0;
+    this.answerId = 0;
+    this.answer = {};
+    this.$http = $http;
+    this.canvas = new fabric.Canvas('c');
+    this.answers = [];
+    this.layers = {};
     this.connectToServer();
+  }
+  setUser() {
+    const filterById = user => parseInt(user.id, 10) === parseInt(this.currentUserId, 10);
+    this.currentUser = R.filter(filterById, this.users)[0];
+  }
+  setItem() {
+    this.canvas.clear();
+    const filterById = item => parseInt(item.key, 10) === parseInt(this.currentItemId, 10);
+    this.currentItem = R.filter(filterById, this.currentUser.history)[0];
+    let i = 1;
+    this.currentItem.data.forEach(answer => {
+      answer.id = i;
+      i++;
+    });
+    this.$http.get('tests/test' + this.currentItemId + '.json')
+      .then(res => {
+        const loadObj = res.data;
+        this.canvas.loadFromJSON(loadObj, () => {
+          console.log('load');
+          this.initCanvas();
+          this.refresh();
+          this.answerId = 1;
+          this.showAnswer();
+        });
+      });
+    console.log('setItem', this.currentItem);
+  }
+  showAnswer(id = 1) {
+    this.answerId = id;
+    this.answer = this.currentItem.data[this.answerId - 1];
+    let selectedItems = [];
+    if (this.currentItem.data[this.answerId - 1] && this.currentItem.data[this.answerId - 1].selectedItems) {
+      selectedItems = selectedItems.concat(this.currentItem.data[this.answerId - 1].selectedItems);
+    }
+    console.log('anwers', selectedItems);
+    this.canvas.getObjects().forEach(obj => {
+      if (selectedItems.includes(obj.label)) {
+        obj.setFill('white');
+        obj.setStroke('black');
+        obj.colored = true;
+      } else {
+        if (obj.colored) {
+          obj.setFill('black');
+          obj.setStroke('');
+        }
+        obj.colored = false;
+      }
+    });
+    this.refresh();
   }
   connectToServer() {
     if (this.$window.XMLHttpRequest) { // Mozilla, Safari, ...
@@ -16,7 +76,7 @@ class ResultsController {
       this.xhr = new ActiveXObject('Microsoft.XMLHTTP');
     }
     const data = 'command=get_info';
-    this.xhr.open('POST', 'http://karelin.s-host.net/php/db.php', true);
+    this.xhr.open('POST', 'http://karelin.s-host.net/php/total.php', true);
     this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     this.xhr.send(data);
     const prom = new Promise(resolve => {
@@ -30,6 +90,21 @@ class ResultsController {
       const desc = (a, b) => b.date - a.date;
       this.data = R.sort(desc, result);
       console.log('result', this.data);
+      this.data.forEach(user => {
+        const userData = angular.fromJson(user.data);
+        user.name = user.id + '.' + userData.name;
+        user.history = [];
+        if (user.witkin) {
+          const w = angular.fromJson(user.witkin).witkin;
+          if (w.history) {
+            const keys = R.keys(w.history);
+            keys.forEach(key => {
+              user.history.push({key, data: w.history[key]});
+            });
+          }
+        }
+        this.users.unshift(user);
+      });
       const lastNumber = Math.max.apply(this, R.pluck('id')(result));
       this.id = lastNumber + 1;
       this.isDataReady = true;
@@ -262,9 +337,109 @@ class ResultsController {
     }
     this.$scope.password = '';
   }
+
+  refresh() {
+    this.canvas.renderAll();
+  }
+
+  initCanvas() {
+    const coordsX = [];
+    const coordsY = [];
+    let count = 0;
+    this.canvas.getObjects().forEach(obj => {
+      // console.log('obj.id', obj.id);
+      obj.label = count;
+      count++;
+      this.addToLayer(obj);
+      if (obj.id === 'lines' || obj.id.includes('answer') || obj.id.includes('multiple')) {
+        if (obj.id.includes('answer') && this.answers.indexOf(obj.id) === -1) {
+          this.answers.push(obj.id);
+        }
+      }
+      obj.hasControls = false;
+      obj.lockMovementX = true;
+      obj.lockMovementY = true;
+      obj.lockRotation = true;
+      obj.selectable = false;
+      coordsX.push(obj.left);
+      coordsX.push(obj.left + obj.width);
+      coordsY.push(obj.top);
+      coordsY.push(obj.top + obj.height);
+    });
+    const w = Math.max.apply(null, coordsX) - Math.min.apply(null, coordsX);
+    const h = Math.max.apply(null, coordsY) - Math.min.apply(null, coordsY);
+    this.realSize = Math.max(h, w) + 90;
+    console.log('realSize', this.realSize);
+    this.showLayers(['background', 'lines', 'required'].concat(this.answers));
+    this.zoomIt(500 / this.realSize);
+    this.layers.required.forEach(o => {
+      o.left += 500;
+    });
+    this.refresh();
+    console.log('init complete');
+  }
+  addToLayer(obj) {
+    const id = obj.id;
+    if (!this.layers[id]) {
+      this.layers[id] = [];
+    }
+    this.layers[id].push(obj);
+  }
+  zoomIt(factor) {
+    // this.canvas.setHeight(this.canvas.getHeight() * factor);
+    // this.canvas.setWidth(this.canvas.getWidth() * factor);
+    console.log('zoom to', factor);
+    if (this.canvas.backgroundImage) {
+      // Need to scale background images as well
+      const bi = this.canvas.backgroundImage;
+      bi.width *= factor;
+      bi.height *= factor;
+    }
+    const objects = this.canvas.getObjects();
+// eslint-disable-next-line
+    for (let i in objects) {
+      const scaleX = objects[i].scaleX;
+      const scaleY = objects[i].scaleY;
+      const left = objects[i].left;
+      const top = objects[i].top;
+
+      const tempScaleX = scaleX * factor;
+      const tempScaleY = scaleY * factor;
+      const tempLeft = left * factor;
+      const tempTop = top * factor;
+
+      objects[i].scaleX = tempScaleX;
+      objects[i].scaleY = tempScaleY;
+      objects[i].left = tempLeft;
+      objects[i].top = tempTop;
+
+      objects[i].setCoords();
+    }
+    this.canvas.renderAll();
+    this.canvas.calcOffset();
+  }
+  showLayers(layers) {
+    this.hideAll();
+    layers.forEach(layer => {
+      if (this.layers[layer] && this.layers[layer].length > 0) {
+        this.layers[layer].forEach(obj => {
+          obj.visible = true;
+        });
+      }
+    });
+  }
+  hideAll() {
+    for (const id in this.layers) {
+      if (this.layers[id].length > 0) {
+        this.layers[id].forEach(obj => {
+          obj.visible = false;
+        });
+      }
+    }
+  }
 }
 
-ResultsController.$inject = ['$state', 'userService', '$window', '$scope'];
+ResultsController.$inject = ['$state', '$window', '$scope', '$http'];
 
 export const results = {
   template: require('./Results.html'),

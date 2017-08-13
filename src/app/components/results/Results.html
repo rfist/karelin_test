@@ -16,40 +16,85 @@
     </div>
   </form>
 
-  <div ng-show="$ctrl.isDataReady">
-    <h2 class="text-center">Доступні операції:</h2>
-    <div class="row">
-      <div  class="text-center">
-        <h3>Нова таблиця</h3>
-        <h4>Зберегти:</h4>
-      </div>
-      <div class="col-sm-6 col-sm-offset-4">
-        <button type="submit" class="btn btn-green" ng-click="$ctrl.saveCirclesResults()">Кола та опитування</button>
-        <button type="submit" class="btn btn-green" ng-click="$ctrl.saveWitkinResults()">Тест Віткина</button>
-      </div>
-    </div>
-    <br>
-    <br>
-    <div class="row text-center">
-      <p>Ви також маєте змогу видалити всі отримані на даний момент результати тестів, але перед цим треба їх зберегти</p>
-      <button class="btn btn-red" ng-click="$ctrl.clearResults()" ng-disabled="$ctrl.checkIfAllSaved()">Видалити всі результати</button>
-    </div>
-    <br><br>
-    <div class="row">
-      <div  class="text-center">
-        <h3>Стара таблиця</h3>
-        <h4>Зберегти:</h4>
-      </div>
-      <div class="col-sm-6 col-sm-offset-4">
-        <button type="submit" class="btn btn-green" ng-click="$ctrl.saveCirclesResults()">Кола та опитування</button>
-        <button type="submit" class="btn btn-green" ng-click="$ctrl.saveWitkinResults()">Тест Віткина</button>
-      </div>
-    </div>
-    <br>
-    <br>
+  <div ng-show="$ctrl.isDataReady && $ctrl.isAuthorized">
+    <!--<h2 class="text-center">Доступні операції:</h2>-->
+    <!--<div class="row">-->
+      <!--<div  class="text-center">-->
+        <!--<h3>Нова таблиця</h3>-->
+        <!--<h4>Зберегти:</h4>-->
+      <!--</div>-->
+      <!--<div class="col-sm-6 col-sm-offset-4">-->
+        <!--<button type="submit" class="btn btn-green" ng-click="$ctrl.saveCirclesResults()">Кола та опитування</button>-->
+        <!--<button type="submit" class="btn btn-green" ng-click="$ctrl.saveWitkinResults()">Тест Віткина</button>-->
+      <!--</div>-->
+    <!--</div>-->
+    <!--<br>-->
+    <!--<br>-->
     <!--<div class="row text-center">-->
       <!--<p>Ви також маєте змогу видалити всі отримані на даний момент результати тестів, але перед цим треба їх зберегти</p>-->
       <!--<button class="btn btn-red" ng-click="$ctrl.clearResults()" ng-disabled="$ctrl.checkIfAllSaved()">Видалити всі результати</button>-->
     <!--</div>-->
+    <!--<br><br>-->
+    <!--<div class="row">-->
+      <!--<div  class="text-center">-->
+        <!--<h3>Стара таблиця</h3>-->
+        <!--<h4>Зберегти:</h4>-->
+      <!--</div>-->
+      <!--<div class="col-sm-6 col-sm-offset-4">-->
+        <!--<button type="submit" class="btn btn-green" ng-click="$ctrl.saveCirclesResults()">Кола та опитування</button>-->
+        <!--<button type="submit" class="btn btn-green" ng-click="$ctrl.saveWitkinResults()">Тест Віткина</button>-->
+      <!--</div>-->
+    <!--</div>-->
+    <!--<br>-->
+    <!--<br>-->
+    <!--<div class="row text-center">-->
+      <!--<p>Ви також маєте змогу видалити всі отримані на даний момент результати тестів, але перед цим треба їх зберегти</p>-->
+      <!--<button class="btn btn-red" ng-click="$ctrl.clearResults()" ng-disabled="$ctrl.checkIfAllSaved()">Видалити всі результати</button>-->
+    <!--</div>-->
+    <div>
+      <label for="totalUsers"> Респондент: </label>
+      <select name="totalUsers" id="totalUsers" ng-model="$ctrl.currentUserId" ng-change="$ctrl.setUser()">
+        <option ng-repeat="user in $ctrl.users" value="{{user.id}}">{{user.name}}</option>
+      </select>
+      <label for="item"> Фігура: </label>
+      <select name="item" id="item" ng-model="$ctrl.currentItemId" ng-change="$ctrl.setItem()">
+        <option ng-repeat="item in $ctrl.currentUser.history" value="{{item.key}}">{{item.key}}</option>
+      </select>
+      <!--<label for="answer"> Відповідь: </label>-->
+      <!--<select name="answer" id="answer" ng-model="$ctrl.answerId" ng-change="$ctrl.showAnswer()">-->
+        <!--<option ng-repeat="answer in $ctrl.currentItem.data" value="{{answer.id}}">Спроба {{answer.id}}</option>-->
+      <!--</select>-->
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-10">
+        <canvas class="canvas" id="c" width="1000" height="500"></canvas>
+        </div>
+        <div class="col-sm-2">
+          <form ng-submit="submit()" ng-cloak>
+            <p>Спроба:</p>
+            <md-radio-group ng-model="data.group1">
+              <md-radio-button class="md-primary" ng-click="$ctrl.showAnswer(answer.id)" ng-repeat="answer in $ctrl.currentItem.data" value="{{answer.id}}">{{answer.id}}</md-radio-button>
+            </md-radio-group>
+          </form>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6">
+          <h3>Загальний підсумок</h3>
+        </div>
+        <div class="col-sm-6">
+          <h3>Поточна статистика</h3>
+          <span>Тест складено: {{$ctrl.answer.isCorrect}}</span> <br>
+          <span>Процент правильного виділення: {{$ctrl.answer.correctPercents}}</span> <br>
+          <span>Зайві елементі: {{$ctrl.answer.sparesCount}}</span> <br>
+          <span>Кількість підказок: {{$ctrl.answer.countOfUsedHint}}</span> <br>
+          <span>Час пошуку: {{$ctrl.answer.passedTime}}</span> <br>
+          <span>Час виділення: {{$ctrl.answer.selectedTime}}</span> <br>
+          <span>Проміжок часу між початком виділення та першою дією: {{$ctrl.answer.timeBeforeFirstClick}}</span> <br>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
