@@ -1,6 +1,6 @@
 class WitkinTestController {
   constructor($http, $timeout, $window, $state, userService, $scope) {
-    this.TESTS_COUNT = 24;
+    this.TESTS_COUNT = 12;
     this.HIGHLIGHT_COLOR = 'grey';
     this.SELECT_COLOR = 'white';
     this.info = '';
@@ -30,13 +30,17 @@ class WitkinTestController {
     this.isMouseDown = false;
     this.$scope = $scope;
     console.log('lastWitkinTest', userService.lastWitkinTest, $state);
-    if (this.userService.user.unregistered) {
-      this.$state.go('app');
-    }
-    if (this.id < userService.lastWitkinTest) {
-      this.$state.go('witkin-start', {id: userService.lastWitkinTest});
+    if (this.$state.current.name === 'example') {
+      this.id = 0;
     } else {
-      userService.lastWitkinTest = this.id;
+      if (this.userService.user.unregistered) {
+        this.$state.go('app');
+      }
+      if (this.id < userService.lastWitkinTest) {
+        this.$state.go('witkin-start', {id: userService.lastWitkinTest});
+      } else {
+        userService.lastWitkinTest = this.id;
+      }
     }
     $http.get('tests/test' + this.id + '.json')
       .then(res => {
@@ -63,9 +67,6 @@ class WitkinTestController {
     const multipleAnswers = [];
     const coordsX = [];
     const coordsY = [];
-    this.circles = [];
-    this.circlesObjects = [];
-    this.drawedLines = [];
     this.isDrawing = false;
     let count = 0;
     this.canvas.getObjects().forEach(obj => {
@@ -415,6 +416,8 @@ class WitkinTestController {
         if (sparesCount <= 3 && percent >= 58) {
           isCorrect = true;
           correctPercents = percent;
+        } else if (percent > correctPercents) {
+          correctPercents = percent; // сохраняем наилучший результат для статистики
         }
       }
       answer++;
@@ -423,7 +426,7 @@ class WitkinTestController {
     resultObj.passedTime = this.passedTime;
     resultObj.selectedTime = this.getCurrentTime() - (this.startTime + this.passedTime);
     resultObj.countOfUsedHint = this.countOfUsedHint;
-    resultObj.timeBeforeFirstClick = this.countOfUsedHint;
+    resultObj.timeBeforeFirstClick = this.timeBeforeFirstClick;
     return resultObj;
   }
   reset() {

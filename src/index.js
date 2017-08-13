@@ -21,7 +21,7 @@ import {resume} from './app/components/resume/Resume';
 export const app = 'app';
 
 angular
-  .module('app', ['ui.router'])
+  .module('app', ['ui.router', 'ngMaterial'])
   .config(routesConfig)
   .service('userService', UserService)
   .component('app', main)

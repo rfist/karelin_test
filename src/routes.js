@@ -67,5 +67,9 @@ function routesConfig($stateProvider, $urlRouterProvider, $locationProvider) {
     .state('end', {
       url: '/end',
       component: 'endTest'
+    })
+    .state('example', {
+      url: '/example:id',
+      component: 'visualTest'
     });
 }
