@@ -32,6 +32,13 @@ function routesConfig($stateProvider, $urlRouterProvider, $locationProvider) {
         app: 'witkinHelp'
       }
     })
+    .state('witkin-text', {
+      url: '/witkin-help-text',
+      views: {
+        user: 'userComponent',
+        app: 'witkinHelpText'
+      }
+    })
     .state('witkin-before-start', {
       url: '/witkin-help2',
       views: {

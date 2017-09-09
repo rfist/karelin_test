@@ -7,6 +7,7 @@ import {main} from './app/components/Main';
 import {editor} from './app/components/editor/Editor';
 import {witkinTest} from './app/components/witkin/WitkinTest';
 import {witkinHelp} from './app/components/witkin/WitkinHelp';
+import {witkinHelpText} from './app/components/witkin/witkinHelpText';
 import {witkinHelp2} from './app/components/witkin/WitkinHelp2';
 import {assertionTest} from './app/components/assertions/AssertionTest';
 import {results} from './app/components/results/Results';
@@ -21,13 +22,14 @@ import {resume} from './app/components/resume/Resume';
 export const app = 'app';
 
 angular
-  .module('app', ['ui.router', 'ngMaterial'])
+  .module('app', ['ui.router', 'ngMaterial', 'youtube-embed'])
   .config(routesConfig)
   .service('userService', UserService)
   .component('app', main)
   .component('editor', editor)
   .component('visualTest', witkinTest)
   .component('witkinHelp', witkinHelp)
+  .component('witkinHelpText', witkinHelpText)
   .component('witkinHelp2', witkinHelp2)
   .component('assertionTest', assertionTest)
   .component('circlesTest', circlesTest)
