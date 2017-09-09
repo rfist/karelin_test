@@ -310,6 +310,8 @@ class WitkinTestController {
         e.target.setStroke('');
       }
       this.refresh();
+    } else {
+      toastr.warning('Якщо ви знайшли просту фігуру, натисніть кнопку «ФІГУРУ ЗНАЙДЕНО');
     }
   }
   refresh() {
