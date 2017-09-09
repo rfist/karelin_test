@@ -1,46 +1,28 @@
 <div class="marginLeft10">
   <h2 class="text-center">Методика 3</h2>
   <p>
-    <strong>Інструкція.</strong> Вам буде показано 24 складні фігури. До кожної складної
+    <strong>Інструкція.</strong> Вам буде показано 12 складних фігур. До кожної складної
     фігури буде запропоновано просту фігуру, яка міститься у складній і є
     її частиною. Ваше завдання – знайти і виділити цю просту фігуру у
     складній.
   </p>
   <p>
-    На пошук кожної простої фігури  надається 120 секунд. Результатом
-    тесту вважається час, витрачений на виконання всіх 24-х завдань.
+    На пошук кожної простої фігури надається 120 секунд. Результатом тесту
+    вважається час, витрачений на виконання всіх 12-ти завдань.
   </p>
-  <h2 class="text-center">Приклад</h2>
+
+  <p>Продивіться відео, як проходити цей тест</p>
   <div>
-    <p>1. Спочатку, впродовж п’ятнадцяти секунд, ви побачите складну фігуру (Ілюстрація 1). Її необхідно ретельно роздивитись і запам’ятати. </p>
-    <img src="images/witkin_help_1.jpg" id="image1"><label for="image1">Ілюстрація 1</label><Br>
+    <youtube-video video-id="theBestVideo"></youtube-video>
   </div>
-  <div>
-    <p>2. Далі на екрані з’явиться проста фігура (Ілюстрація 2). Це триватиме десять секунд. Після того ви знов побачите складну фігуру. Разом з тим розпочнеться відлік часу. </p>
-    <img src="images/witkin_help_2.jpg" id="image2"><label for="image2">Ілюстрація 2</label><Br>
-  </div>
-  <div>
-    <p>3. Як тільки ви віднайдете просту фігуру у складній, натисніть кнопку «ФІГУРУ ЗНАЙДЕНО» (Ілюстрація 3).</p>
-    <img src="images/witkin_help_3.jpg" id="image3" style="padding: 30px"><label for="image3">Ілюстрація 3</label><Br>
-  </div>
-  <div>
-    <p>4. Усі лінії складної фігури стануть інтерактивними. При наведенні курсору лінія забарвлюється в сірий колір (Ілюстрація 4). </p>
-    <img src="images/witkin_help_4.jpg" id="image4"><label for="image4">Ілюстрація 4</label><Br>
-  </div>
-  <div>
-    <p>5. Щоб виділити лінію, клацніть по ній лівою кнопкою миші. Колір лінії при цьому зміниться на білий (Ілюстрація 5). </p>
-    <img src="images/witkin_help_5.jpg" id="image5"><label for="image5">Ілюстрація 5</label><Br>
-  </div>
-  <div>
-    <p>6. За допомогою курсору слід виділити ті лінії складної фігури, які утворюють просту фігуру (Ілюстрація 6). Коли завдання виконано, натисніть кнопку «Перевірити». </p>
-    <img src="images/witkin_help_6.jpg" id="image6"><label for="image6">Ілюстрація 6</label><Br>
-  </div>
-  <div>
-    <p><strong>7. Шукайте просту фігуру, ідентичну за формою і розміром. </strong></p>
-  </div>
-  <div class="form-group">
-    <div class="col-sm-6 col-sm-offset-3">
-      <button type="submit" class="btn btn-primary btn-block" ng-click="$ctrl.startTest()">Далі</button>
+  <br>
+
+  <p>Також ви можете ознайомитися с  <a ui-sref="witkin-text" style="color: dodgerblue">текстовими варіантом інструкції</a></p>
+  <br>
+  <div class="row">
+    <div class="col-md-4 "></div>
+    <div class="col-md-4 ">
+        <button type="submit" class="btn btn-primary btn-block" ng-click="$ctrl.startTest()" ng-disabled="!isVideoWatched">Далі</button>
     </div>
   </div>
   <br>
