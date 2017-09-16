@@ -367,8 +367,12 @@ class WitkinTestController {
     });
     prom.then(() => {
       console.log('saveResults');
-      this.isTestFinished = true;
-      this.$scope.$digest();
+      if (this.id < this.TESTS_COUNT) {
+        this.isTestFinished = true;
+        this.$scope.$digest();
+      } else {
+        this.$state.go('end');
+      }
     });
   }
   next() {
