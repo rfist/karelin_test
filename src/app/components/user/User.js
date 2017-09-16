@@ -28,7 +28,7 @@ class UserController {
         toastr.remove();
       }
     };
-    toastr.warning('Ви впевнені, що бажаєте закінчити тестування? Весь прогрес буде втрачено. <br><br>' +
+    toastr.warning('Ви впевнені, що бажаєте закінчити тестування? Усі результати буде втрачено. <br><br>' +
       '<div style="text-align: center;"><button type="button" id="stayBtn" class="btn btn-primary">Продовжити</button>&nbsp' +
       '<button type="button" id="okBtn" class="btn btn-primary">Закінчити</button>' +
       '</div>');
