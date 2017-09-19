@@ -371,6 +371,7 @@ class WitkinTestController {
         this.isTestFinished = true;
         this.$scope.$digest();
       } else {
+        toastr.remove();
         this.$state.go('end');
       }
     });
