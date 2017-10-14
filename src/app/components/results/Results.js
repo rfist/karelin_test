@@ -18,6 +18,7 @@ class ResultsController {
     this.answers = [];
     this.layers = {};
     this.connectToServer();
+    this.statistics = {allTests: 0, allTestsPassInfo: {}};
   }
   setUser() {
     const filterById = user => parseInt(user.id, 10) === parseInt(this.currentUserId, 10);
@@ -110,7 +111,29 @@ class ResultsController {
       this.isDataReady = true;
       this.$scope.$digest();
       console.log('user id', this.id);
+      this.makeStatistics();
     });
+  }
+  makeStatistics() {
+    this.users.forEach(user => {
+      if (user.history.length === 12) {
+        this.statistics.allTests++;
+        let passed = 0;
+        user.history.forEach(level => {
+          if (level.data.length > 0 && level.data[level.data.length - 1].isCorrect) {
+            passed++;
+          }
+        });
+        const passedPercent = parseInt(100 * (passed / 12), 10);
+        if (this.statistics.allTestsPassInfo[passedPercent]) {
+          this.statistics.allTestsPassInfo[passedPercent]++;
+        } else {
+          this.statistics.allTestsPassInfo[passedPercent] = 1;
+        }
+      }
+    }
+  );
+    this.$scope.$digest();
   }
   saveCirclesResults() {
     const ids = [];

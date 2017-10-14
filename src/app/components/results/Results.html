@@ -54,7 +54,7 @@
     <div>
       <label for="totalUsers"> Респондент: </label>
       <select name="totalUsers" id="totalUsers" ng-model="$ctrl.currentUserId" ng-change="$ctrl.setUser()">
-        <option ng-repeat="user in $ctrl.users" value="{{user.id}}">{{user.name}}</option>
+        <option ng-repeat="user in $ctrl.users | orderBy:'id'" value="{{user.id}}">{{user.name}}</option>
       </select>
       <label for="item"> Фігура: </label>
       <select name="item" id="item" ng-model="$ctrl.currentItemId" ng-change="$ctrl.setItem()">
@@ -83,6 +83,10 @@
       <div class="row">
         <div class="col-sm-6">
           <h3>Загальний підсумок</h3>
+          <span>Повністю пройшли тест: {{$ctrl.statistics.allTests}}</span> <br>
+            <div ng-repeat="(key, value) in $ctrl.statistics.allTestsPassInfo" style="padding-left: 50px">
+              <span> {{key}}% : {{ value }} респондентів</span>
+          </div>
         </div>
         <div class="col-sm-6">
           <h3>Поточна статистика</h3>
