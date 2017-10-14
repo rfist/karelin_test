@@ -88,10 +88,17 @@ class ResultsController {
       };
     });
     prom.then(result => {
+      this.users = [];
+      const ids = [];
       const desc = (a, b) => b.date - a.date;
       this.data = R.sort(desc, result);
       console.log('result', this.data);
       this.data.forEach(user => {
+        if (ids.includes(user.inner_id)) {
+          console.error('inner_id error', user, user.inner_id);
+        } else {
+          ids.push(user.inner_id);
+        }
         const userData = angular.fromJson(user.data);
         user.name = user.id + '.' + userData.name;
         user.history = [];
@@ -351,7 +358,6 @@ class ResultsController {
   }
 
   login() {
-    console.log('login', this.$scope.password);
     // eslint-disable-next-line
     if (CryptoJS.SHA256(this.$scope.password).toString() === '16d2b85db8b68ea3d0d8f6ed4d73724a51ad62d4cae0d5311abdf3541b94244c') {
       console.log('Authorized!');
