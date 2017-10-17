@@ -83,9 +83,9 @@
       <div class="row">
         <div class="col-sm-6">
           <h3>Загальний підсумок</h3>
-          <span>Повністю пройшли тест: {{$ctrl.statistics.allTests}}</span> <br>
+          <span>Повністю пройшли тест: {{$ctrl.statistics.allTests}} з {{$ctrl.users.length}}</span> <br>
             <div ng-repeat="(key, value) in $ctrl.statistics.allTestsPassInfo" style="padding-left: 50px">
-              <span> {{key}}% : {{ value }} респондентів</span>
+              <span> Контекст {{key}} : {{ value }} респондентів</span>
           </div>
         </div>
         <div class="col-sm-6">

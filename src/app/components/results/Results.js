@@ -17,7 +17,7 @@ class ResultsController {
     this.canvas = new fabric.Canvas('c');
     this.answers = [];
     this.layers = {};
-    this.connectToServer();
+    // this.connectToServer();
     this.statistics = {allTests: 0, allTestsPassInfo: {}};
   }
   setUser() {
@@ -122,20 +122,17 @@ class ResultsController {
     });
   }
   makeStatistics() {
+    console.log('this.users', this.users.length);
+    this.statistics.allTests = 0;
+    this.statistics.allTestsPassInfo = {};
     this.users.forEach(user => {
       if (user.history.length === 12) {
         this.statistics.allTests++;
-        let passed = 0;
-        user.history.forEach(level => {
-          if (level.data.length > 0 && level.data[level.data.length - 1].isCorrect) {
-            passed++;
-          }
-        });
-        const passedPercent = parseInt(100 * (passed / 12), 10);
-        if (this.statistics.allTestsPassInfo[passedPercent]) {
-          this.statistics.allTestsPassInfo[passedPercent]++;
+        const context = angular.fromJson(user.circles).selectedCircle;
+        if (this.statistics.allTestsPassInfo[context]) {
+          this.statistics.allTestsPassInfo[context]++;
         } else {
-          this.statistics.allTestsPassInfo[passedPercent] = 1;
+          this.statistics.allTestsPassInfo[context] = 1;
         }
       }
     }
