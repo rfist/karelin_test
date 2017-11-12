@@ -139,6 +139,171 @@ class ResultsController {
   );
     this.$scope.$digest();
   }
+  saveResults() {
+    const inputUsers = [].concat(this.users); // this.users.splice(0, 10)
+    const defaultEmpty = R.defaultTo('Не вказано');
+    console.log('users', inputUsers);
+    const contextStatistic = {};
+    const witkinStatistic = {};
+    const headers1 = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '55', '56', '57', '58', '59', '60', '61', '62', '63', '64', '65', '66', '67', '68', '69', '70', '71', '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92', '93', '94', '95', '96', '97', '98', '99', '100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '110', '111', '112', '113', '114', '115', '116', '117', '118', '119', '120', '121', '122', '123', '124', '125', '126', '127', '128', '129', '130', '131', '132', '133', 'Контекст', 'Тест Віткіна'];
+    const headers2 = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', 'Контекст', ' ', 'Кількість використаних підказок', '', '', 'Потребує аналізу (<5 с)', 'ID', 'Сумарний час пошуку', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', ' ', ' ', 'Потребує аналізу (>5 с)', 'ID', 'Сумарний час простою (вдалі спроби)', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'Потребує аналізу (поза нормою)', 'ID', 'Сумарний час виділення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'ID', 'Сумарна кількість спроб', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+    let allRows = [];
+    const witkinResults = [];
+    allRows.push(headers1);
+    inputUsers.forEach(user => {
+      const userData = [];
+      const info = angular.fromJson(user.data);
+      if (user.circles) {
+        const {assertions, selectedCircle} = angular.fromJson(user.circles);
+        if (contextStatistic[selectedCircle]) {
+          contextStatistic[selectedCircle] += 1;
+        } else {
+          contextStatistic[selectedCircle] = 1;
+        }
+        userData.push(user.id);
+        userData.push(defaultEmpty(info.name));
+        userData.push(defaultEmpty(info.sex === 'female' ? 'жінка' : 'чоловік'));
+        userData.push(defaultEmpty(info.age));
+        userData.push(defaultEmpty(info.education));
+        userData.push(defaultEmpty(info.occupation));
+        userData.push(defaultEmpty(info.marital));
+        userData.push(defaultEmpty(info.city));
+        userData.push(defaultEmpty(info.email));
+        userData.push(moment(info.time).format(`Do MMM YY`));
+        for (let i = 1; i <= 133; i++) {
+          userData.push(defaultEmpty(assertions[i]));
+        }
+        userData.push(selectedCircle);
+        if (user.history.length === 12) {
+          userData.push('+');
+          if (witkinStatistic[selectedCircle]) {
+            witkinStatistic[selectedCircle] += 1;
+          } else {
+            witkinStatistic[selectedCircle] = 1;
+          }
+          const witkinData = [];
+          let countOfAnswersLessFiveSeconds = 0;
+          let countOfTimeBeforeFirstClickMoreFiveSeconds = 0;
+          let totalTimeBeforeFirstClick = 0;
+          let totalSelectedTime = 0;
+          const timeBeforeFirstClickData = [];
+          const selectedTimeData = [];
+          const triesCount = [];
+          let countOfUsedHint = 0;
+          const sparesData = [];
+          witkinData.push(user.id);
+          witkinData.push(defaultEmpty(info.name));
+          witkinData.push(defaultEmpty(info.sex === 'female' ? 'жінка' : 'чоловік'));
+          witkinData.push(defaultEmpty(info.age));
+          witkinData.push(defaultEmpty(info.education));
+          witkinData.push(defaultEmpty(info.occupation));
+          witkinData.push(defaultEmpty(info.marital));
+          witkinData.push(defaultEmpty(info.city));
+          witkinData.push(defaultEmpty(info.email));
+          witkinData.push(moment(info.time).format(`Do MMM YY`));
+          const passedData = [];
+          user.history.forEach(step => {
+            const stepData = step.data[step.data.length - 1];
+            triesCount.push(step.data.length);
+            const joinedTimeBeforFirstClick = step.data.reduce((prev, current, index) => {
+              let result = prev + parseInt((R.defaultTo({timeBeforeFirstClick: 0})(current)).timeBeforeFirstClick, 10);
+              if (index < (step.data.length - 1)) {
+                result += '/';
+              }
+              return result;
+            }, '');
+            timeBeforeFirstClickData.push(joinedTimeBeforFirstClick);
+            const joinedSelectedTime = step.data.reduce((prev, current, index) => {
+              let result = prev + parseInt((R.defaultTo({selectedTime: 0})(current)).selectedTime, 10);
+              if (index < (step.data.length - 1)) {
+                result += '/';
+              }
+              return result;
+            }, '');
+            selectedTimeData.push(joinedSelectedTime);
+            const passedTime = parseInt((R.defaultTo({passedTime: 120})(stepData)).passedTime, 10);
+            if (passedTime < 5) {
+              countOfAnswersLessFiveSeconds++;
+            }
+            const selectedTime = parseInt((R.defaultTo({selectedTime: 0})(stepData)).selectedTime, 10);
+            totalSelectedTime += selectedTime;
+            const timeBeforeFirstClick = parseInt((R.defaultTo({timeBeforeFirstClick: 0})(stepData)).timeBeforeFirstClick, 10);
+            totalTimeBeforeFirstClick += timeBeforeFirstClick;
+            if (timeBeforeFirstClick > 5) {
+              countOfTimeBeforeFirstClickMoreFiveSeconds++;
+            }
+            const sparesCount = (R.defaultTo({sparesCount: 0})(stepData)).sparesCount;
+            countOfUsedHint += (R.defaultTo({countOfUsedHint: 0})(stepData)).countOfUsedHint;
+            witkinData.push(passedTime);
+            passedData.push(passedTime);
+            sparesData.push(sparesCount);
+          });
+          witkinData.push(selectedCircle);
+          witkinData.push(' ');
+          witkinData.push(countOfUsedHint);
+          witkinData.push(' ');
+          witkinData.push(' ');
+          if (countOfAnswersLessFiveSeconds > 1) {
+            witkinData.push('*');
+          } else {
+            witkinData.push(' ');
+          }
+          witkinData.push(user.id);
+          witkinData.push(passedData.reduce((prev, current) => prev + current));// sum of first 12
+          passedData.forEach(p => witkinData.push(p));// repeat first 12
+          witkinData.push(' ');
+          witkinData.push(' ');
+          if (countOfTimeBeforeFirstClickMoreFiveSeconds > 1) {
+            witkinData.push('*');
+          } else {
+            witkinData.push(' ');
+          }
+          witkinData.push(user.id);
+          witkinData.push(totalTimeBeforeFirstClick);// todo: Только удачные попытки
+          timeBeforeFirstClickData.forEach(t => witkinData.push(t));// all times before first click
+          witkinData.push(' ');
+          witkinData.push(' ');
+          witkinData.push(' '); //  temp, add check
+          witkinData.push(user.id);
+          witkinData.push(totalSelectedTime);
+          selectedTimeData.forEach(s => witkinData.push(s));// all times before first click
+          witkinData.push(' ');
+          witkinData.push(' ');
+          witkinData.push(user.id);
+          witkinData.push(triesCount.reduce((prev, current) => prev + current));
+          triesCount.forEach(tr => witkinData.push(tr));// all times before first click
+          witkinResults.push(witkinData);
+        }
+        allRows.push(userData);
+      } else {
+        console.error('No circles information!', user);
+      }
+    });
+    allRows.push([]);
+    allRows.push([]);
+    allRows.push(['Опитувальник: статистика за контекстами']);
+    allRows.push(Object.keys(contextStatistic));
+    allRows.push(Object.values(contextStatistic));
+    // witkin
+    allRows.push([]);
+    allRows.push([]);
+    allRows.push(headers2);
+    allRows = allRows.concat(witkinResults);
+    allRows.push([]);
+    allRows.push([]);
+    allRows.push(['Віткін: статистика за контекстами']);
+    allRows.push(Object.keys(witkinStatistic));
+    allRows.push(Object.values(witkinStatistic));
+    let dataString = '';
+    let csvContent = '';
+    allRows.forEach((infoArray, index) => {
+      dataString = infoArray.join(';');
+      csvContent += index < allRows.length ? dataString + '\n' : dataString;
+    });
+
+    const file = new File([csvContent], 'results.csv', {type: 'text/csv;charset=utf-8,\uFEFF'});
+    saveAs(file, 'results.csv');
+  }
   saveCirclesResults() {
     const ids = [];
     const uniqe = [];
