@@ -51,6 +51,9 @@
       <!--<p>Ви також маєте змогу видалити всі отримані на даний момент результати тестів, але перед цим треба їх зберегти</p>-->
       <!--<button class="btn btn-red" ng-click="$ctrl.clearResults()" ng-disabled="$ctrl.checkIfAllSaved()">Видалити всі результати</button>-->
     <!--</div>-->
+    <div style="padding-bottom: 10px">
+      <button type="submit" class="btn btn-green" ng-click="$ctrl.saveResults()">Зберегти результати</button>
+    </div>
     <div>
       <label for="totalUsers"> Респондент: </label>
       <select name="totalUsers" id="totalUsers" ng-model="$ctrl.currentUserId" ng-change="$ctrl.setUser()">
