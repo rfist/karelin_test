@@ -139,14 +139,47 @@ class ResultsController {
   );
     this.$scope.$digest();
   }
+  findMedianOfSelection(users) {
+    const statistics = [
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      []
+    ];
+    users.forEach(user => {
+      if (user.circles) {
+        if (user.history.length === 12) {
+          for (let i = 0; i < 12; i++) {
+            const step = user.history[i];
+            const stepData = step.data[step.data.length - 1];
+            const selectedTime = parseInt((R.defaultTo({selectedTime: 0})(stepData)).selectedTime, 10);
+            if (selectedTime > 0) {
+              statistics[i].push(selectedTime);
+            }
+          }
+        }
+      }
+    });
+    return R.map(R.median, statistics);
+  }
   saveResults() {
-    const inputUsers = [].concat(this.users); // this.users.splice(0, 10)
+    const inputUsers = [].concat(this.users);
+    // const inputUsers = this.users.splice(0, 10);
+    const medianValues = this.findMedianOfSelection(inputUsers);
     const defaultEmpty = R.defaultTo('Не вказано');
     console.log('users', inputUsers);
     const contextStatistic = {};
     const witkinStatistic = {};
     const headers1 = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '55', '56', '57', '58', '59', '60', '61', '62', '63', '64', '65', '66', '67', '68', '69', '70', '71', '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92', '93', '94', '95', '96', '97', '98', '99', '100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '110', '111', '112', '113', '114', '115', '116', '117', '118', '119', '120', '121', '122', '123', '124', '125', '126', '127', '128', '129', '130', '131', '132', '133', 'Контекст', 'Тест Віткіна'];
-    const headers2 = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', 'Контекст', ' ', 'Кількість використаних підказок', '', '', 'Потребує аналізу (<5 с)', 'ID', 'Сумарний час пошуку', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', ' ', ' ', 'Потребує аналізу (>5 с)', 'ID', 'Сумарний час простою (вдалі спроби)', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'Потребує аналізу (поза нормою)', 'ID', 'Сумарний час виділення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'ID', 'Сумарна кількість спроб', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+    const headers2 = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', 'Контекст', ' ', 'Кількість використаних підказок', '', '', 'Потребує аналізу (<5 с)', 'ID', 'Сумарний час пошуку', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', ' ', ' ', 'Потребує аналізу (>5 с)', 'ID', 'Сумарний час простою', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'Потребує аналізу (поза нормою ' + medianValues.join() + ' )', 'ID', 'Сумарний час виділення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'ID', 'Сумарна кількість спроб', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
     let allRows = [];
     const witkinResults = [];
     allRows.push(headers1);
@@ -184,6 +217,7 @@ class ResultsController {
           const witkinData = [];
           let countOfAnswersLessFiveSeconds = 0;
           let countOfTimeBeforeFirstClickMoreFiveSeconds = 0;
+          let countOfNotMedianSelectValues = 0;
           let totalTimeBeforeFirstClick = 0;
           let totalSelectedTime = 0;
           const timeBeforeFirstClickData = [];
@@ -202,35 +236,50 @@ class ResultsController {
           witkinData.push(defaultEmpty(info.email));
           witkinData.push(moment(info.time).format(`Do MMM YY`));
           const passedData = [];
+          let level = 0;
           user.history.forEach(step => {
             const stepData = step.data[step.data.length - 1];
+            // compare with median value
+            const selectedTime = parseInt((R.defaultTo({selectedTime: 0})(stepData)).selectedTime, 10);
+            const medianValue = medianValues[level];
+            if (selectedTime / medianValue > 1.5) {
+              countOfNotMedianSelectValues++;
+            }
+            level++;
+            // end
             triesCount.push(step.data.length);
-            const joinedTimeBeforFirstClick = step.data.reduce((prev, current, index) => {
-              let result = prev + parseInt((R.defaultTo({timeBeforeFirstClick: 0})(current)).timeBeforeFirstClick, 10);
+            let joinedTimeBeforFirstClick = step.data.reduce((prev, current, index) => {
+              current = parseInt((R.defaultTo({timeBeforeFirstClick: 0})(current)).timeBeforeFirstClick, 10);
+              if (current > 5) {
+                countOfTimeBeforeFirstClickMoreFiveSeconds++;// todo: для больше 5 секунд для всех попыток
+              }
+              totalTimeBeforeFirstClick += current;
+              let result = prev + current;
               if (index < (step.data.length - 1)) {
                 result += '/';
               }
               return result;
             }, '');
+            if (joinedTimeBeforFirstClick.length === 0) {
+              joinedTimeBeforFirstClick = 0;
+            }
             timeBeforeFirstClickData.push(joinedTimeBeforFirstClick);
-            const joinedSelectedTime = step.data.reduce((prev, current, index) => {
-              let result = prev + parseInt((R.defaultTo({selectedTime: 0})(current)).selectedTime, 10);
+            let joinedSelectedTime = step.data.reduce((prev, current, index) => {
+              current = parseInt((R.defaultTo({selectedTime: 0})(current)).selectedTime, 10);
+              totalSelectedTime += current;
+              let result = prev + current;
               if (index < (step.data.length - 1)) {
                 result += '/';
               }
               return result;
             }, '');
+            if (joinedSelectedTime.length === 0) {
+              joinedSelectedTime = 0;
+            }
             selectedTimeData.push(joinedSelectedTime);
-            const passedTime = parseInt((R.defaultTo({passedTime: 120})(stepData)).passedTime, 10);
+            const passedTime = ((R.defaultTo({passedTime: 120})(stepData)).passedTime).toFixed(2);
             if (passedTime < 5) {
               countOfAnswersLessFiveSeconds++;
-            }
-            const selectedTime = parseInt((R.defaultTo({selectedTime: 0})(stepData)).selectedTime, 10);
-            totalSelectedTime += selectedTime;
-            const timeBeforeFirstClick = parseInt((R.defaultTo({timeBeforeFirstClick: 0})(stepData)).timeBeforeFirstClick, 10);
-            totalTimeBeforeFirstClick += timeBeforeFirstClick;
-            if (timeBeforeFirstClick > 5) {
-              countOfTimeBeforeFirstClickMoreFiveSeconds++;
             }
             const sparesCount = (R.defaultTo({sparesCount: 0})(stepData)).sparesCount;
             countOfUsedHint += (R.defaultTo({countOfUsedHint: 0})(stepData)).countOfUsedHint;
@@ -249,8 +298,8 @@ class ResultsController {
             witkinData.push(' ');
           }
           witkinData.push(user.id);
-          witkinData.push(passedData.reduce((prev, current) => prev + current));// sum of first 12
-          passedData.forEach(p => witkinData.push(p));// repeat first 12
+          witkinData.push(passedData.reduce((prev, current) => parseFloat(prev) + parseFloat(current)));// sum of first 12
+          passedData.forEach(p => witkinData.push(parseInt(p, 10)));// repeat first 12
           witkinData.push(' ');
           witkinData.push(' ');
           if (countOfTimeBeforeFirstClickMoreFiveSeconds > 1) {
@@ -263,7 +312,11 @@ class ResultsController {
           timeBeforeFirstClickData.forEach(t => witkinData.push(t));// all times before first click
           witkinData.push(' ');
           witkinData.push(' ');
-          witkinData.push(' '); //  temp, add check
+          if (countOfNotMedianSelectValues > 1) {
+            witkinData.push('*');
+          } else {
+            witkinData.push(' ');
+          }
           witkinData.push(user.id);
           witkinData.push(totalSelectedTime);
           selectedTimeData.forEach(s => witkinData.push(s));// all times before first click
