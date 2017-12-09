@@ -171,7 +171,10 @@ class ResultsController {
     return R.map(R.median, statistics);
   }
   saveResults() {
-    const inputUsers = [].concat(this.users);
+    const asc = (a, b) => a.id - b.id;
+    const inputUsers = R.sort(asc, this.users);
+    // const inputUsers = R.sort(asc, this.users.splice(0, 10));
+    // const inputUsers = [].concat(this.users);
     // const inputUsers = this.users.splice(0, 10);
     const medianValues = this.findMedianOfSelection(inputUsers);
     const defaultEmpty = R.defaultTo('Не вказано');
@@ -179,9 +182,11 @@ class ResultsController {
     const contextStatistic = {};
     const witkinStatistic = {};
     const headers1 = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '55', '56', '57', '58', '59', '60', '61', '62', '63', '64', '65', '66', '67', '68', '69', '70', '71', '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92', '93', '94', '95', '96', '97', '98', '99', '100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '110', '111', '112', '113', '114', '115', '116', '117', '118', '119', '120', '121', '122', '123', '124', '125', '126', '127', '128', '129', '130', '131', '132', '133', 'Контекст', 'Тест Віткіна'];
-    const headers2 = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', 'Контекст', ' ', 'Кількість використаних підказок', '', '', 'Потребує аналізу (<5 с)', 'ID', 'Сумарний час пошуку', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', ' ', ' ', 'Потребує аналізу (>5 с)', 'ID', 'Сумарний час простою', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'Потребує аналізу (поза нормою ' + medianValues.join() + ' )', 'ID', 'Сумарний час виділення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'ID', 'Сумарна кількість спроб', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+    const headers2 = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', 'Контекст', '', 'Кількість використаних підказок', 'Підсумковий час', '', '', 'Потребує аналізу (<5 с)', 'ID', 'Сумарний час пошуку', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'Потребує аналізу (>5 с)', 'ID', 'Сумарний час простою', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'Потребує аналізу (поза нормою ' + medianValues.join() + ' )', 'ID', 'Сумарний час виділення', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'ID', 'Сумарна кількість спроб', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', '', 'ID', 'Сумарний відкорегований час', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
     let allRows = [];
     const witkinResults = [];
+    const incompleteWitkinResults = [];
+    const incompleteWitkinResultsHeaders = ['ID', 'Ім\'я', 'Стать', 'Вік', 'Освіта', 'Професія', 'Сімейний стан', 'Місто', 'Електронна адреса', 'Дата заповнення', 'Контекст', '', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '', 'Кількість використаних підказок'];
     allRows.push(headers1);
     inputUsers.forEach(user => {
       const userData = [];
@@ -223,6 +228,11 @@ class ResultsController {
           const timeBeforeFirstClickData = [];
           const selectedTimeData = [];
           const triesCount = [];
+          const fixedTotalTimeDueSelectedTime = [];
+          for (let i = 0; i < 12; i++) {
+            fixedTotalTimeDueSelectedTime.push(0);
+          }
+          let amountOfPenaltySecondsToTotalTime = 0;
           let countOfUsedHint = 0;
           const sparesData = [];
           witkinData.push(user.id);
@@ -236,8 +246,10 @@ class ResultsController {
           witkinData.push(defaultEmpty(info.email));
           witkinData.push(moment(info.time).format(`Do MMM YY`));
           const passedData = [];
+          const totalPassedTimeCalculated = [];
           let level = 0;
           user.history.forEach(step => {
+            let passedTimeCalculated = 0;
             const stepData = step.data[step.data.length - 1];
             // compare with median value
             const selectedTime = parseInt((R.defaultTo({selectedTime: 0})(stepData)).selectedTime, 10);
@@ -248,11 +260,13 @@ class ResultsController {
             level++;
             // end
             triesCount.push(step.data.length);
-            let joinedTimeBeforFirstClick = step.data.reduce((prev, current, index) => {
-              current = parseInt((R.defaultTo({timeBeforeFirstClick: 0})(current)).timeBeforeFirstClick, 10);
-              if (current > 5) {
+            let joinedTimeBeforFirstClick = step.data.reduce((prev, current, index) => {// считаем время простоя
+              current = (((R.defaultTo({timeBeforeFirstClick: 0})(current)).timeBeforeFirstClick).toFixed(2)) / 1; // чтоб не было стрингов
+              if (current >= 5) {
                 countOfTimeBeforeFirstClickMoreFiveSeconds++;// todo: для больше 5 секунд для всех попыток
+                passedTimeCalculated += (current - 4);
               }
+              current = parseInt(current, 10);
               totalTimeBeforeFirstClick += current;
               let result = prev + current;
               if (index < (step.data.length - 1)) {
@@ -266,6 +280,9 @@ class ResultsController {
             timeBeforeFirstClickData.push(joinedTimeBeforFirstClick);
             let joinedSelectedTime = step.data.reduce((prev, current, index) => {
               current = parseInt((R.defaultTo({selectedTime: 0})(current)).selectedTime, 10);
+              if (current > medianValue) {
+                fixedTotalTimeDueSelectedTime[level - 1] += (current - medianValue);
+              }
               totalSelectedTime += current;
               let result = prev + current;
               if (index < (step.data.length - 1)) {
@@ -273,59 +290,117 @@ class ResultsController {
               }
               return result;
             }, '');
+            // amountOfPenaltySecondsToTotalTime += fixedTotalTimeDueSelectedTime[level - 1];
             if (joinedSelectedTime.length === 0) {
               joinedSelectedTime = 0;
             }
             selectedTimeData.push(joinedSelectedTime);
-            const passedTime = ((R.defaultTo({passedTime: 120})(stepData)).passedTime).toFixed(2);
+            const passedTime = (((R.defaultTo({passedTime: 120})(stepData)).passedTime).toFixed(2)) / 1;//  потраченное время во время последней попытки
             if (passedTime < 5) {
               countOfAnswersLessFiveSeconds++;
             }
+            passedTimeCalculated += passedTime;
             const sparesCount = (R.defaultTo({sparesCount: 0})(stepData)).sparesCount;
             countOfUsedHint += (R.defaultTo({countOfUsedHint: 0})(stepData)).countOfUsedHint;
-            witkinData.push(passedTime);
+            if (passedTimeCalculated > 120 || passedTimeCalculated === 0) {
+              passedTimeCalculated = 120;
+            }
+            witkinData.push(passedTimeCalculated);
+            totalPassedTimeCalculated.push(passedTimeCalculated);
+            //
+            const oldValue = passedTimeCalculated;
+            fixedTotalTimeDueSelectedTime[level - 1] += passedTimeCalculated;
+            if (fixedTotalTimeDueSelectedTime[level - 1] >= 120) {
+              fixedTotalTimeDueSelectedTime[level - 1] = 120;
+              if (oldValue < 120) {
+                amountOfPenaltySecondsToTotalTime += (120 - oldValue);
+              }
+            } else {
+              amountOfPenaltySecondsToTotalTime += (fixedTotalTimeDueSelectedTime[level - 1] - passedTimeCalculated);
+            }
             passedData.push(passedTime);
             sparesData.push(sparesCount);
           });
           witkinData.push(selectedCircle);
-          witkinData.push(' ');
+          witkinData.push('');
           witkinData.push(countOfUsedHint);
-          witkinData.push(' ');
-          witkinData.push(' ');
+          const reducedTotalPassedTimeCalculated = totalPassedTimeCalculated.reduce((prev, current) => parseFloat(prev) + parseFloat(current));
+          witkinData.push(reducedTotalPassedTimeCalculated);// Підсумковий час
+          witkinData.push('');
+          witkinData.push('');
           if (countOfAnswersLessFiveSeconds > 1) {
             witkinData.push('*');
           } else {
-            witkinData.push(' ');
+            witkinData.push('');
           }
           witkinData.push(user.id);
           witkinData.push(passedData.reduce((prev, current) => parseFloat(prev) + parseFloat(current)));// sum of first 12
           passedData.forEach(p => witkinData.push(parseInt(p, 10)));// repeat first 12
-          witkinData.push(' ');
-          witkinData.push(' ');
-          if (countOfTimeBeforeFirstClickMoreFiveSeconds > 1) {
+          witkinData.push('');
+          witkinData.push('');
+          if (countOfTimeBeforeFirstClickMoreFiveSeconds > 0) {
             witkinData.push('*');
           } else {
-            witkinData.push(' ');
+            witkinData.push('');
           }
           witkinData.push(user.id);
           witkinData.push(totalTimeBeforeFirstClick);// todo: Только удачные попытки
           timeBeforeFirstClickData.forEach(t => witkinData.push(t));// all times before first click
-          witkinData.push(' ');
-          witkinData.push(' ');
+          witkinData.push('');
+          witkinData.push('');
           if (countOfNotMedianSelectValues > 1) {
             witkinData.push('*');
           } else {
-            witkinData.push(' ');
+            witkinData.push('');
           }
           witkinData.push(user.id);
           witkinData.push(totalSelectedTime);
           selectedTimeData.forEach(s => witkinData.push(s));// all times before first click
-          witkinData.push(' ');
-          witkinData.push(' ');
+          witkinData.push('');
+          witkinData.push('');
           witkinData.push(user.id);
           witkinData.push(triesCount.reduce((prev, current) => prev + current));
           triesCount.forEach(tr => witkinData.push(tr));// all times before first click
           witkinResults.push(witkinData);
+          witkinData.push('');
+          witkinData.push('');
+          witkinData.push(user.id);
+          witkinData.push(reducedTotalPassedTimeCalculated + amountOfPenaltySecondsToTotalTime);
+          fixedTotalTimeDueSelectedTime.forEach(f => witkinData.push(f));// all times before first click
+        } else if (user.history.length > 0) {
+          let incompleteWitkinData = [];
+          incompleteWitkinData.push(user.id);
+          incompleteWitkinData.push(defaultEmpty(info.name));
+          incompleteWitkinData.push(defaultEmpty(info.sex === 'female' ? 'жінка' : 'чоловік'));
+          incompleteWitkinData.push(defaultEmpty(info.age));
+          incompleteWitkinData.push(defaultEmpty(info.education));
+          incompleteWitkinData.push(defaultEmpty(info.occupation));
+          incompleteWitkinData.push(defaultEmpty(info.marital));
+          incompleteWitkinData.push(defaultEmpty(info.city));
+          incompleteWitkinData.push(defaultEmpty(info.email));
+          incompleteWitkinData.push(moment(info.time).format(`Do MMM YY`));
+          // console.log('user.history', incompleteWitkinData, user.history);
+          let level = 0;
+          let countOfUsedHint = 0;
+          const selectedTimes = new Array(12).fill('');
+          user.history.forEach(step => {
+            const stepData = step.data[step.data.length - 1];
+            console.log('stepData', stepData, level);
+            if (stepData && stepData.selectedTime) {
+              selectedTimes[level] = stepData.selectedTime.toFixed(2);
+              // console.log('ffffff', stepData.selectedTime.toFixed(2));
+            } else {
+              selectedTimes[level] = 120;
+            }
+            level++;
+            countOfUsedHint += (R.defaultTo({countOfUsedHint: 0})(stepData)).countOfUsedHint;
+          });
+          incompleteWitkinData.push(selectedCircle);
+          incompleteWitkinData.push('');
+          incompleteWitkinData = incompleteWitkinData.concat(selectedTimes);
+          incompleteWitkinData.push('');
+          incompleteWitkinData.push(countOfUsedHint);
+          incompleteWitkinResults.push(incompleteWitkinData);
         }
         allRows.push(userData);
       } else {
@@ -347,9 +422,18 @@ class ResultsController {
     allRows.push(['Віткін: статистика за контекстами']);
     allRows.push(Object.keys(witkinStatistic));
     allRows.push(Object.values(witkinStatistic));
+    allRows.push([]);
+    allRows.push([]);
+    allRows.push(incompleteWitkinResultsHeaders);
+    incompleteWitkinResults.forEach(i => allRows.push(i));
     let dataString = '';
     let csvContent = '';
     allRows.forEach((infoArray, index) => {
+      infoArray.forEach((s, i, arr) => {
+        if (angular.isString(s)) {
+          arr[i] = s.replace(/;/g, ' ');
+        }
+      }); // escape all ';' symbols
       dataString = infoArray.join(';');
       csvContent += index < allRows.length ? dataString + '\n' : dataString;
     });
