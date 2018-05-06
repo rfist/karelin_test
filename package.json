@@ -1,5 +1,5 @@
 {
-  "name": "survey app",
+  "name": "survey_app",
   "version": "0.1.2",
   "dependencies": {
     "angular": "^1.6.2",
