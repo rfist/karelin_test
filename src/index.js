@@ -10,6 +10,8 @@ import {witkinHelp} from './app/components/witkin/WitkinHelp';
 import {witkinHelpText} from './app/components/witkin/witkinHelpText';
 import {witkinHelp2} from './app/components/witkin/WitkinHelp2';
 import {assertionTest} from './app/components/assertions/AssertionTest';
+import {survey1} from './app/components/survey1/Survey1';
+import {survey2} from './app/components/survey2/Survey2';
 import {results} from './app/components/results/Results';
 import {circlesTest} from './app/components/circles/CirclesTest';
 import {endTest} from './app/components/end/EndTest';
@@ -32,6 +34,8 @@ angular
   .component('witkinHelpText', witkinHelpText)
   .component('witkinHelp2', witkinHelp2)
   .component('assertionTest', assertionTest)
+  .component('survey1', survey1)
+  .component('survey2', survey2)
   .component('circlesTest', circlesTest)
   .component('results', results)
   .component('userComponent', user)
