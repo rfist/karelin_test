@@ -1,0 +1,17 @@
+<div ng-hide="$ctrl.isTestStarted" >
+  <h2 class="text-center">Додаткова методика 2</h2>
+  <div class="col-sm-offset-1">
+    <p>Пожалуйста, прочитайте утверждения теста и оцените свойственно ли Вам описанное поведение. Для того чтоб обозначить свой ответ, выберите один из 4 вариантов оценок, пронумерованных от 0 до 3.</p>
+    <ul style="list-style-type: none">
+      <li>0 – нет; </li>
+      <li>1 – скорее нет;</li>
+      <li>2 – скорее да;</li>
+      <li>3 – да.</li>
+    </ul>
+  </div>
+  <br>
+  <div class="col-sm-6 col-sm-offset-5">
+    <button type="submit" class="btn btn-green" ng-click="$ctrl.startTest($event)">Розпочати тест</button>
+  </div>
+</div>
+<div id="surveyContainer"></div>

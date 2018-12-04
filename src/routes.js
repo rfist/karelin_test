@@ -53,6 +53,20 @@ function routesConfig($stateProvider, $urlRouterProvider, $locationProvider) {
         app: 'assertionTest'
       }
     })
+    .state('survey1', {
+      url: '/survey1',
+      views: {
+        user: 'userComponent',
+        app: 'survey1'
+      }
+    })
+    .state('survey2', {
+      url: '/survey2',
+      views: {
+        user: 'userComponent',
+        app: 'survey2'
+      }
+    })
     .state('circles', {
       url: '/circles',
       views: {
