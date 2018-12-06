@@ -9,16 +9,16 @@
   <h2 class="text-center">Методика 1</h2>
   <div>
     <p><strong>Інструкція.</strong> За допомогою кіл на цьому малюнку зображено різні варіанти стосунків між людьми. Кола можуть бути одне над іншим, далеко одне від одного, близько, можуть перетинатися, сполучатися і т. д. </p>
-    <p>Будь ласка, пригадайте конкретну людину у вашому житті, стосунки з якою підпадають під один з доступних для вибору варіантів. (Це може бути будь-хто, з ким ви бачитеся раз на місяць або набагато частіше, спілкуєтесь, можливо робите щось разом, тобто маєте більш-менш інтенсивні взаємовідносини.)</p>
+    <p>Будь ласка, пригадайте конкретну людину у вашому житті, стосунки з якою підпадають під варіант 7 (Це може бути будь-хто, з ким ви бачитеся раз на місяць або набагато частіше, спілкуєтесь, можливо робите щось разом, тобто маєте більш-менш інтенсивні взаємовідносини.)</p>
     <strong class="text-center">Щоб зробити свій вибір, клацніть по обраному вами зображенню. (У цій версії тесту деякі варіанти є недоступними). </strong>
   </div>
   <br>
   <div class="row">
     <div class="col-md-6">
-      <input class="centeredImage" ng-class="{true:'dashed', false:''}[$ctrl.selected==1]" type="image" ng-click="$ctrl.select(1)" src="images/circle1.jpg" >
+      <input class="centeredImage disabledImage" ng-class="{true:'dashed', false:''}[$ctrl.selected==1]" type="image" src="images/circle1.jpg" >
     </div>
     <div class="col-md-6">
-      <input class="centeredImage" ng-class="{true:'dashed', false:''}[$ctrl.selected==2]" type="image" ng-click="$ctrl.select(2)" src="images/circle2.jpg" >
+      <input class="centeredImage disabledImage" ng-class="{true:'dashed', false:''}[$ctrl.selected==2]" type="image" src="images/circle2.jpg" >
     </div>
   </div>
   <div class="row">
@@ -31,7 +31,7 @@
   </div>
   <div class="row">
     <div class="col-md-6">
-      <input class="centeredImage" ng-class="{true:'dashed', false:''}[$ctrl.selected==5]"  type="image" ng-click="$ctrl.select(5)" src="images/circle5.jpg" >
+      <input class="centeredImage disabledImage" ng-class="{true:'dashed', false:''}[$ctrl.selected==5]"  type="image" src="images/circle5.jpg" >
     </div>
     <div class="col-md-6">
       <input class="centeredImage disabledImage" ng-class="{true:'dashed', false:''}[$ctrl.selected==6]" type="image" src="images/circle6.jpg"  title="Варіант недоступний">
@@ -45,7 +45,7 @@
       <input class="centeredImage disabledImage" ng-class="{true:'dashed', false:''}[$ctrl.selected==8]" type="image"  src="images/circle8.jpg"  title="Варіант недоступний">
     </div>
   </div>
-  <p>Якщо вам не вдається згадати людину, стосунки з якою підпадали б під один з доступних варіантів, ми пропонуємо краще відмовитися від подальшого тестування, аніж «підтягувати» не зовсім відповідні стосунки під доступний для вибору варіант. Інакше, це може негативно вплинути на успішність нашого дослідження.</p>
+  <p>Якщо вам не вдається згадати людину, стосунки з якою підпадали б під варіант 7, ми пропонуємо краще відмовитися від подальшого тестування, аніж «підтягувати» не зовсім відповідні стосунки під доступний для вибору варіант. Інакше, це може негативно вплинути на успішність нашого дослідження.</p>
   <p>У будь-якому випадку, ми надзвичайно вдячні вам за готовність допомогти у реалізації цього проекту</p>
   <br>
   <div class="row">

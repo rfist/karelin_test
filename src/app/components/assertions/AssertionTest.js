@@ -140,7 +140,7 @@ class AssertionTestController {
       console.log('circles test finished', result);
       // this.userService.lastState = 'restore';
       this.userService.save();
-      this.$state.go('survey1');
+      this.$state.go('info');
     });
   }
 }

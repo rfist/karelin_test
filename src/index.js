@@ -10,6 +10,7 @@ import {witkinHelp} from './app/components/witkin/WitkinHelp';
 import {witkinHelpText} from './app/components/witkin/witkinHelpText';
 import {witkinHelp2} from './app/components/witkin/WitkinHelp2';
 import {assertionTest} from './app/components/assertions/AssertionTest';
+import {info} from './app/components/info/Info';
 import {survey1} from './app/components/survey1/Survey1';
 import {survey2} from './app/components/survey2/Survey2';
 import {results} from './app/components/results/Results';
@@ -34,6 +35,7 @@ angular
   .component('witkinHelpText', witkinHelpText)
   .component('witkinHelp2', witkinHelp2)
   .component('assertionTest', assertionTest)
+  .component('info', info)
   .component('survey1', survey1)
   .component('survey2', survey2)
   .component('circlesTest', circlesTest)
